@@ -87,7 +87,7 @@ def process_pdf(client, pdf_path, progress_callback=None):
             )
             
             response = client.models.generate_content(
-                model='gemini-2.5-flash',
+                model='gemini-1.5-pro',
                 contents=[prompt, image_part]
             )
             
@@ -136,7 +136,7 @@ def review_single_section(client, section_text, section_num):
     
     try:
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-1.5-pro',
             contents=prompt
         )
         
@@ -344,3 +344,4 @@ if uploaded_file is not None:
 else:
 
     st.info("👆 PDF 파일을 업로드하면 시작할 수 있습니다.")
+
