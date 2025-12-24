@@ -235,8 +235,9 @@ def generate_report(results):
 # ==========================================
 st.set_page_config(page_title="수학 교재 PDF 변환 & 검토", layout="wide")
 
-st.title("📄 수학 교재 PDF → Markdown 변환 & 검토")
-st.markdown("PDF를 업로드하면 텍스트로 변환하고, 문법/수학적 오류까지 검토합니다.")
+st.title("PDF 검토 자동화")
+st.markdown("목적: pdf를 업로드하면 md 텍스트로 변환하고, 문법/수학적 오류를 검토합니다.")
+st.markdown("주의: Integrate 계정으로 google AI Studio에 접속해 발급받은 API Key를 왼쪽 사이드바에 입력해야 합니다.")
 
 # 사이드바 설정
 with st.sidebar:
@@ -341,4 +342,5 @@ if uploaded_file is not None:
                 os.remove(tmp_path)
 
 else:
+
     st.info("👆 PDF 파일을 업로드하면 시작할 수 있습니다.")
