@@ -13,7 +13,8 @@ from pdf2image import convert_from_path
 # ==========================================
 # [초기 설정]
 # ==========================================
-st.set_page_config(page_title="니무네 방앗간", layout="wide")
+# 페이지 탭 제목 변경
+st.set_page_config(page_title="업무 자동화", layout="wide")
 
 # ==========================================
 # [상수 및 환경 설정]
@@ -28,7 +29,7 @@ else:
 # ==========================================
 # [프롬프트: 종합 학술 감사관 v8.0]
 # ==========================================
-AUDITOR_PROMPT_TEMPLATE = """
+AUDITOR_PROMPT_HEAD = """
 # 🏆 종합 학술 감사관 (Scholarly Auditor v8.0)
 
 ## 1. 🥇 핵심 정체성
@@ -110,17 +111,11 @@ AUDITOR_PROMPT_TEMPLATE = """
 [System Status] 현재 누적된 오판 로그(LOG_ID): N개
 
 </FINAL REPORT>
-
----------------------------------------------------------
-[검토할 텍스트]
-{section_text}
----------------------------------------------------------
 """
 
 # ==========================================
 # [로직 함수: 조사 규칙 검사 및 유틸리티]
 # ==========================================
-# (기존 유틸리티 함수들은 그대로 유지)
 _JONGSUNG_LIST = ["", "ㄱ", "ㄲ", "ㄳ", "ㄴ", "ㄵ", "ㄶ", "ㄷ", "ㄹ", "ㄺ", "ㄻ", "ㄼ", "ㄽ", "ㄾ", "ㄿ", "ㅀ", "ㅁ", "ㅂ", "ㅄ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"]
 _LATIN_LAST_JONG = {"A": "", "B": "", "C": "", "D": "", "E": "", "F": "", "G": "", "H": "", "I": "", "J": "", "K": "", "L": "ㄹ", "M": "ㅁ", "N": "ㄴ", "O": "", "P": "", "Q": "", "R": "ㄹ", "S": "", "T": "", "U": "", "V": "", "W": "", "X": "", "Y": "", "Z": ""}
 _DIGIT_LAST_JONG = {"0": "ㅇ", "1": "ㄹ", "2": "", "3": "ㅁ", "4": "", "5": "", "6": "ㄱ", "7": "ㄹ", "8": "ㄹ", "9": ""}
@@ -202,7 +197,7 @@ def rule_check_josa(section_text):
     return errors
 
 # ==========================================
-# [TeX 처리 로직: ZIP 추출 & 문항/해설 그룹핑]
+# [TeX 처리 로직]
 # ==========================================
 def extract_tex_from_zip(zip_file_bytes):
     try:
@@ -220,7 +215,6 @@ def extract_tex_from_zip(zip_file_bytes):
         return None, f"ZIP 파일 처리 중 오류 발생: {str(e)}"
 
 def parse_tex_content(tex_content):
-    """문항과 해설을 하나의 세트로 묶어서 추출 (Day 등 불필요 헤더 제거)"""
     pattern = r'\\begin\{document\}([\s\S]*?)\\end\{document\}'
     match = re.search(pattern, tex_content)
     body = match.group(1).strip() if match else tex_content
@@ -288,22 +282,15 @@ def parse_tex_content(tex_content):
     return final_items
 
 # ==========================================
-# [리뷰 및 리포트 로직 (업데이트됨)]
+# [리뷰 및 리포트 로직]
 # ==========================================
 def review_single_section(client, section_text, section_num):
-    """
-    업데이트된 프롬프트(v8.0)를 사용해 검토 수행.
-    JSON 파싱 대신 AI가 생성한 Markdown 리포트를 그대로 반환합니다.
-    """
-    
-    # 규칙 기반 검사(참고용)
     rule_errors = rule_check_josa(section_text)
     
-    # 프롬프트 구성
-    prompt = AUDITOR_PROMPT_TEMPLATE.format(section_text=section_text)
+    # Python format() 함수 충돌 방지: 단순 문자열 병합 사용
+    prompt = AUDITOR_PROMPT_HEAD + "\n\n---------------------------------------------------------\n[검토할 텍스트]\n" + section_text + "\n---------------------------------------------------------"
     
     try:
-        # 모델명은 최신 것으로 설정 (Gemini 1.5 Pro or Flash 권장)
         response = client.models.generate_content(
             model='gemini-2.0-flash-exp', 
             contents=prompt
@@ -312,7 +299,7 @@ def review_single_section(client, section_text, section_num):
         return {
             "section": section_num,
             "rule_errors": rule_errors,
-            "ai_report_text": response.text  # AI의 Markdown 텍스트 그대로 반환
+            "ai_report_text": response.text
         }
         
     except Exception as e:
@@ -323,21 +310,18 @@ def review_single_section(client, section_text, section_num):
         }
 
 def generate_report(results):
-    """전체 리포트 병합"""
     lines = ["# 🏆 종합 학술 감사 보고서\n"]
     
     for res in results:
         lines.append(f"\n---")
         lines.append(f"## 📄 문항 세트 {res['section']}\n")
         
-        # 1. 규칙 기반 오류 (Python 검출) - 있으면 먼저 표시
         if res.get('rule_errors'):
             lines.append("### 🐍 [Python 규칙 감지] (참고용)")
             for err in res['rule_errors']:
                 lines.append(f"- **{err['original']}** → `{err['corrected']}` ({err['reason']})")
             lines.append("\n")
             
-        # 2. AI 학술 감사관 리포트 (Markdown)
         if 'api_error' in res:
             lines.append(f"⚠️ **API Error:** {res['api_error']}")
         else:
@@ -358,7 +342,8 @@ def navigate_to(page):
 # [페이지 1: 메인 페이지]
 # ==========================================
 def main_page():
-    st.title("니무네 방앗간 (Nimu's Mill)")
+    # 메인 타이틀 변경
+    st.title("업무 자동화")
     st.markdown("### 작업 선택")
     
     col1, col2 = st.columns(2)
@@ -382,14 +367,12 @@ def page_2512():
         st.rerun()
     st.divider()
     
-    # PDF 관련 함수(process_pdf)는 유지되었으나 UI는 간소화함 (기능 작동)
-    # 실제로는 기존 PDF OCR 코드를 여기에 복원하거나 그대로 두면 됩니다.
     st.title("수학 교재 PDF 변환 & 검토")
     st.info("이곳은 기존 PDF 변환 기능을 수행하는 곳입니다.")
-    # (기존 PDF 로직 생략 - ZIP 기능 집중)
+    st.file_uploader("PDF 업로드", type=["pdf"], key="pdf_uploader_old")
 
 # ==========================================
-# [페이지 3: TeX 자동화 (v8.0 프롬프트 적용)]
+# [페이지 3: TeX 자동화]
 # ==========================================
 def page_tex_automation():
     if st.button("← 메인으로 돌아가기"):
@@ -427,9 +410,12 @@ def page_tex_automation():
         items = parse_tex_content(tex_content)
         st.info(f"총 {len(items)}개의 문항 세트(문제+해설)가 추출되었습니다.")
         
-        with st.expander("추출된 문항 미리보기 (첫 1개)"):
-            if items:
-                st.code(items[0], language='latex')
+        # 전체 문항 확인 (Expander)
+        st.subheader("🔎 추출된 문항 전체 보기")
+        for idx, item in enumerate(items):
+            preview_title = item[:50].replace('\n', ' ') + "..."
+            with st.expander(f"문항 {idx+1}: {preview_title}"):
+                st.code(item, language='latex')
 
         if st.button("🚀 AI 학술 감사 시작", type="primary"):
             if not st.session_state.api_key:
@@ -445,7 +431,6 @@ def page_tex_automation():
                 status_text.text(f"감사관 검토 중... ({i+1}/{len(items)})")
                 progress_bar.progress((i + 1) / len(items))
                 
-                # v8.0 프롬프트로 검토
                 result = review_single_section(client, item_text, i + 1)
                 all_results.append(result)
                 time.sleep(1) 
@@ -454,7 +439,7 @@ def page_tex_automation():
             
             st.divider()
             st.subheader("📋 감사 결과 보고서")
-            st.markdown(report) # 마크다운 렌더링
+            st.markdown(report)
             st.download_button("📥 리포트 다운로드", report, file_name="auditor_report_v8.md")
             st.success("완료되었습니다!")
 
