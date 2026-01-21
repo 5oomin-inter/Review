@@ -20,15 +20,13 @@ st.set_page_config(page_title="업무 자동화", layout="wide")
 st.markdown("""
     <style>
     /* 1. 뷰어(st.code) 스타일: 강력한 자동 줄바꿈 적용 */
-    /* pre 태그와 내부 code 태그 모두에 강제 줄바꿈 속성을 부여합니다. */
     [data-testid="stCodeBlock"] pre {
-        white-space: pre-wrap !important;       /* 공백은 유지하되 줄바꿈 허용 */
-        word-break: break-all !important;       /* LaTeX 처럼 긴 단어도 강제로 줄바꿈 */
-        overflow-wrap: break-word !important;   /* 단어 단위 줄바꿈 우선 시도 */
-        
-        max-height: 600px !important;           /* 세로 높이 제한 */
-        overflow-y: auto !important;            /* 세로 스크롤 활성화 */
-        overflow-x: hidden !important;          /* 가로 스크롤 제거 */
+        white-space: pre-wrap !important;
+        word-break: break-all !important;
+        overflow-wrap: break-word !important;
+        max-height: 600px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
     }
     
     [data-testid="stCodeBlock"] code {
@@ -176,28 +174,23 @@ def get_line_number(full_text, index): return full_text.count('\n', 0, index) + 
 
 def rule_check_josa(section_text):
     errors = []
-    # 1. 수식 뒤 조사
     for m in _MATH_JOSA_PATTERN.finditer(section_text):
         math = m.group("math")
         ws = m.group("ws") or ""
         josa = m.group("josa")
         last_jong = _last_jong_from_math(math) 
-        
         math_content = math.strip("$")
         last_char = math_content[-1] if math_content else ""
         if re.match(r'\d', last_char): derived_jong = _number_last_jong(last_char)
         elif re.match(r'[A-Za-z]', last_char): derived_jong = _latin_last_jong(last_char)
         else: derived_jong = "" 
-        
         exp = _expected_josa(josa, derived_jong)
         original = f"{math}{ws}{josa}"
         corrected = f"{math}{exp}"
         line_num = get_line_number(section_text, m.start())
-        
         if josa != exp and derived_jong != "":
             errors.append({"location": f"{line_num}행", "original": original, "corrected": corrected, "reason": "조사 오류(수식)", "severity": "medium"})
             
-    # 2. 숫자 뒤 조사
     for m in _NUM_JOSA_PATTERN.finditer(section_text):
         num = m.group("num")
         ws = m.group("ws") or ""
@@ -241,7 +234,6 @@ def parse_tex_content(tex_content):
     body = re.sub(r'\\maketitle', '', body)
     body = re.sub(r'\\newpage', '', body)
     body = re.sub(r'\\clearpage', '', body)
-    
     start_pattern = re.compile(r'\\section\*?\{')
     matches = list(start_pattern.finditer(body))
     if not matches: return [body]
@@ -293,20 +285,31 @@ def review_tex_section(model, section_text, section_num):
     except Exception as e:
         return {"section": section_num, "rule_errors": rule_errors, "api_error": str(e)}
 
-def generate_report_for_tex(results):
+def generate_report_for_tex(results_grouped_by_file):
     lines = ["# 🏆 종합 학술 감사 보고서\n"]
-    for res in results:
-        lines.append(f"\n---")
-        lines.append(f"## 📄 문항 세트 {res['section']}\n")
-        if res.get('rule_errors'):
-            lines.append("### 🐍 [Python 규칙 감지] (참고용)")
-            lines.append("| 위치 | 오류 내용 | 원문 $\\to$ 수정 제안 |")
-            lines.append("| :--- | :--- | :--- |")
-            for err in res['rule_errors']:
-                lines.append(f"| {err['location']} | {err['reason']} | {err['original']} $\\to$ {err['corrected']} |")
-            lines.append("\n")
-        if 'api_error' in res: lines.append(f"⚠️ **API Error:** {res['api_error']}")
-        else: lines.append(res['ai_report_text'])
+    
+    # results_grouped_by_file는 { "filename": [results...], ... } 형태여야 함
+    for filename, results in results_grouped_by_file.items():
+        lines.append(f"\n# 📁 파일: {filename}")
+        lines.append("---")
+        
+        for res in results:
+            lines.append(f"\n## 📄 문항 세트 {res['section']}")
+            
+            if res.get('rule_errors'):
+                lines.append("### 🐍 [Python 규칙 감지] (참고용)")
+                lines.append("| 위치 | 오류 내용 | 원문 $\\to$ 수정 제안 |")
+                lines.append("| :--- | :--- | :--- |")
+                for err in res['rule_errors']:
+                    lines.append(f"| {err['location']} | {err['reason']} | {err['original']} $\\to$ {err['corrected']} |")
+                lines.append("\n")
+                
+            if 'api_error' in res: 
+                lines.append(f"⚠️ **API Error:** {res['api_error']}")
+            else: 
+                lines.append(res['ai_report_text'])
+            lines.append("\n---")
+            
     return "\n".join(lines)
 
 
@@ -392,8 +395,7 @@ def main_page():
 
     st.markdown("""
     **LaTeX ZIP 자동 정제 및 검토 시스템**입니다.
-    1. 변환 프로그램의 **ZIP 파일**을 업로드하세요.
-    2. 자동으로 **[문제+해설]**을 묶어 **깔끔한 표**로 검토합니다.
+    여러 개의 **ZIP 파일**을 한 번에 업로드할 수 있습니다.
     """)
 
     with st.sidebar:
@@ -402,34 +404,54 @@ def main_page():
         api_input = st.text_input("Google API Key", value=st.session_state.api_key, type="password")
         st.session_state.api_key = api_input
     
-    uploaded_zip = st.file_uploader("ZIP 파일 업로드 (.zip)", type=["zip"])
+    # [수정] 다중 파일 업로드 허용
+    uploaded_zips = st.file_uploader("ZIP 파일 업로드 (.zip)", type=["zip"], accept_multiple_files=True)
     
-    if uploaded_zip:
-        with st.spinner("ZIP 파일 분석 중..."):
-            tex_content, error = extract_tex_from_zip(uploaded_zip)
-        
-        if error: st.error(error); st.stop()
-            
-        st.success("✅ .tex 파일 추출 성공!")
-        items = parse_tex_content(tex_content)
-        st.info(f"총 {len(items)}개의 문항 세트가 추출되었습니다.")
-        
-        st.subheader("🔎 문항 전체 보기 (통합)")
-        
-        full_text = "\n\n" + ("="*30) + "\n\n".join(items)
-        
-        # [Tab 사용] 뷰어 / 에디터 분리
-        tab1, tab2 = st.tabs(["👁️ 뷰어 (Color & Wrap)", "✏️ 에디터 (수정)"])
-        
-        with tab1:
-            st.caption("색깔로 구분되며, 긴 문장은 자동으로 다음 줄로 넘어갑니다.")
-            st.code(full_text, language='latex')
-            
-        with tab2:
-            st.caption("텍스트를 직접 수정하고 복사할 수 있는 화면입니다.")
-            st.text_area("TeX Editor", value=full_text, height=600, label_visibility="collapsed")
+    # 처리할 모든 작업(모든 파일의 모든 문항)을 저장할 리스트
+    # 구조: {"filename": str, "items": [str, str, ...]}
+    all_files_data = []
 
-        if st.button("🚀 AI 학술 감사 시작", type="primary"):
+    if uploaded_zips:
+        # 각 ZIP 파일 순회하며 처리
+        for i, uploaded_zip in enumerate(uploaded_zips):
+            # 시각적 구분선
+            st.divider()
+            st.markdown(f"### 📁 파일 {i+1}: {uploaded_zip.name}")
+            
+            with st.spinner(f"{uploaded_zip.name} 분석 중..."):
+                tex_content, error = extract_tex_from_zip(uploaded_zip)
+            
+            if error:
+                st.error(error)
+                continue
+                
+            items = parse_tex_content(tex_content)
+            
+            # 나중에 AI 감사를 위해 저장
+            all_files_data.append({
+                "filename": uploaded_zip.name,
+                "items": items
+            })
+            
+            st.info(f"✅ 추출 완료: 총 {len(items)}개 문항 세트")
+            
+            # 통합 텍스트 생성
+            full_text = "\n\n" + ("="*30) + "\n\n".join(items)
+            
+            # 파일별 고유 탭 생성 (key 충돌 방지를 위해 index 사용)
+            tab1, tab2 = st.tabs([f"👁️ 뷰어 ({i+1})", f"✏️ 에디터 ({i+1})"])
+            
+            with tab1:
+                st.code(full_text, language='latex')
+            with tab2:
+                # 에디터 key를 파일 인덱스나 이름으로 유니크하게 설정해야 함
+                st.text_area(f"Editor_{i}", value=full_text, height=400, label_visibility="collapsed")
+
+        # ----------------------------------------------------
+        # AI 감사 시작 버튼 (모든 파일 통합 처리)
+        # ----------------------------------------------------
+        st.divider()
+        if st.button("🚀 전체 파일 AI 학술 감사 시작", type="primary"):
             if not st.session_state.api_key: st.error("API Key를 입력해주세요."); st.stop()
             
             genai.configure(api_key=st.session_state.api_key)
@@ -438,28 +460,47 @@ def main_page():
             progress_bar = st.progress(0)
             status_text = st.empty()
             
-            all_results = []
-            for i, item_text in enumerate(items):
-                status_text.text(f"감사관 검토 중... ({i+1}/{len(items)})")
-                progress_bar.progress((i + 1) / len(items))
-                
-                max_retries = 3; retry_delay = 5
-                for attempt in range(max_retries):
-                    result = review_tex_section(model, item_text, i + 1)
-                    if "api_error" in result and "429" in str(result["api_error"]):
-                        if attempt < max_retries - 1:
-                            time.sleep(retry_delay); retry_delay *= 2
-                            continue
-                    all_results.append(result)
-                    break
-                time.sleep(2) 
+            # 전체 작업량 계산 (Progress bar용)
+            total_tasks = sum(len(f['items']) for f in all_files_data)
+            current_task_idx = 0
             
-            report = generate_report_for_tex(all_results)
+            # 결과 저장용 딕셔너리: { "filename": [results...] }
+            results_by_file = {}
+
+            for file_data in all_files_data:
+                filename = file_data['filename']
+                items = file_data['items']
+                file_results = []
+                
+                status_text.text(f"📂 {filename} 검토 중...")
+                
+                for j, item_text in enumerate(items):
+                    # Progress Update
+                    current_task_idx += 1
+                    progress_bar.progress(current_task_idx / total_tasks)
+                    
+                    # AI Request
+                    max_retries = 3; retry_delay = 5
+                    for attempt in range(max_retries):
+                        result = review_tex_section(model, item_text, j + 1)
+                        if "api_error" in result and "429" in str(result["api_error"]):
+                            if attempt < max_retries - 1:
+                                time.sleep(retry_delay); retry_delay *= 2
+                                continue
+                        file_results.append(result)
+                        break
+                    time.sleep(2) # Rate Limit Control
+                
+                results_by_file[filename] = file_results
+            
+            # 리포트 생성
+            report = generate_report_for_tex(results_by_file)
+            
             st.divider()
-            st.subheader("📋 감사 결과 보고서")
+            st.subheader("📋 통합 감사 결과 보고서")
             st.markdown(report)
-            st.download_button("📥 리포트 다운로드", report, file_name="auditor_report_v8.2.md")
-            st.success("완료되었습니다!")
+            st.download_button("📥 리포트 다운로드", report, file_name="integrated_auditor_report.md")
+            st.success("모든 파일의 검토가 완료되었습니다!")
 
 # ==========================================
 # [화면 2] 2512 페이지 (Legacy PDF)
