@@ -15,15 +15,24 @@ from pdf2image import convert_from_path
 st.set_page_config(page_title="업무 자동화", layout="wide")
 
 # ==========================================
-# [CSS 스타일: 코드 블록 스크롤 제어 및 버튼 고정]
+# [CSS 스타일: 코드 블록 스크롤 제어 및 자동 줄바꿈]
 # ==========================================
 st.markdown("""
     <style>
-    /* 1. 코드 블록(LaTeX 결과물)의 최대 높이 제한 및 내부 스크롤 적용 */
-    /* 내용이 길어도 복사 버튼이 있는 헤더는 고정되고 내용만 스크롤됩니다. */
+    /* 1. 코드 블록(LaTeX 결과물) 스타일링 */
     [data-testid="stCodeBlock"] pre {
-        max-height: 600px !important; /* 높이는 필요에 따라 조절 가능 */
-        overflow-y: auto !important;
+        max-height: 600px !important;       /* 세로 높이 제한 */
+        overflow-y: auto !important;        /* 세로 스크롤 활성화 */
+        
+        /* [추가된 부분] 가로 스크롤 제거 및 자동 줄바꿈 설정 */
+        white-space: pre-wrap !important;   /* 줄바꿈 강제 적용 */
+        word-break: break-word !important;  /* 단어가 길면 잘라서 줄바꿈 */
+        overflow-x: hidden !important;      /* 가로 스크롤바 숨김 */
+    }
+    
+    /* 코드 블록 내부의 code 태그에도 줄바꿈 상속 */
+    [data-testid="stCodeBlock"] code {
+        white-space: pre-wrap !important;
     }
     
     /* 2. 복사 버튼의 z-index 보장 */
@@ -413,10 +422,10 @@ def main_page():
         st.info(f"총 {len(items)}개의 문항 세트가 추출되었습니다.")
         
         st.subheader("🔎 문항 전체 보기 (통합)")
-        # [수정] 모든 문항을 줄바꿈으로 연결하여 하나의 코드 블록에 출력
-        # 구분선(% ===...)을 추가하여 시각적 구분을 둠
-        full_converted_tex = "\n\n% ==========================================\n\n".join(items)
-        st.code(full_converted_tex, language='latex')
+        
+        # [수정] 모든 문항을 하나로 합쳐서 출력
+        full_text = "\n\n" + ("="*30) + "\n\n".join(items)
+        st.code(full_text, language='latex')
 
         if st.button("🚀 AI 학술 감사 시작", type="primary"):
             if not st.session_state.api_key: st.error("API Key를 입력해주세요."); st.stop()
