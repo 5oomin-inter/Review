@@ -15,18 +15,23 @@ from pdf2image import convert_from_path
 st.set_page_config(page_title="업무 자동화", layout="wide")
 
 # ==========================================
-# [CSS 스타일 주입: 코드 블록 스크롤 제어]
+# [CSS 스타일: 코드 블록 스크롤 제어 및 버튼 고정]
 # ==========================================
-# 이 CSS는 긴 코드 블록에 최대 높이를 지정하고 내부 스크롤을 만듭니다.
-# 결과적으로 코드 블록의 상단(복사 버튼 위치)이 화면 밖으로 밀려나는 것을 방지합니다.
 st.markdown("""
     <style>
-    /* Expander 내부의 코드 블록 스타일 조정 */
-    .streamlit-expanderContent [data-testid="stCodeBlock"] pre {
-        max-height: 500px; /* 코드 블록의 최대 높이 (필요시 조절 가능) */
-        overflow-y: auto;  /* 내용이 길면 내부에 스크롤바 생성 */
+    /* 1. 코드 블록(LaTeX 결과물)의 최대 높이 제한 및 내부 스크롤 적용 */
+    /* 내용이 길어도 복사 버튼이 있는 헤더는 고정되고 내용만 스크롤됩니다. */
+    [data-testid="stCodeBlock"] pre {
+        max-height: 600px !important; /* 높이는 필요에 따라 조절 가능 */
+        overflow-y: auto !important;
     }
-    /* 버튼 간격 조정 */
+    
+    /* 2. 복사 버튼의 z-index 보장 */
+    [data-testid="stCodeBlock"] button {
+        z-index: 999 !important;
+    }
+
+    /* 3. 버튼 레이아웃 정렬 */
     div[data-testid="column"] {
         display: flex;
         align-items: center; 
@@ -368,19 +373,18 @@ def navigate_to(page):
 # [화면 1] 메인 페이지 (LaTeX ZIP 자동화)
 # ==========================================
 def main_page():
-    # 상단 버튼 레이아웃: 타이틀(좌) / 타이머+2512(우)
+    # 상단 버튼 레이아웃: 타이틀(좌) / 버튼 그룹(우)
     col_title, col_btns = st.columns([7, 3])
     
     with col_title: 
         st.title("업무 자동화 (LaTeX ZIP)")
     
     with col_btns:
-        # 버튼들을 우측 정렬 느낌으로 배치하기 위해 내부 컬럼 사용
         c1, c2 = st.columns(2)
         with c1:
             st.link_button("⏱️ 타이머", "https://integrate-git.github.io/timer/timer.html", use_container_width=True)
         with c2:
-            if st.button("2512ver ▶", use_container_width=True): # 버튼 이름 변경
+            if st.button("2512ver ▶", use_container_width=True): 
                 navigate_to('2512')
                 st.rerun()
 
@@ -408,12 +412,11 @@ def main_page():
         items = parse_tex_content(tex_content)
         st.info(f"총 {len(items)}개의 문항 세트가 추출되었습니다.")
         
-        st.subheader("🔎 문항 전체 보기")
-        for idx, item in enumerate(items):
-            preview_title = item[:50].replace('\n', ' ') + "..."
-            with st.expander(f"문항 {idx+1}: {preview_title}"):
-                # [CSS 적용] 내용이 길면 내부 스크롤이 생기면서 복사 버튼은 상단에 고정됨
-                st.code(item, language='latex')
+        st.subheader("🔎 문항 전체 보기 (통합)")
+        # [수정] 모든 문항을 줄바꿈으로 연결하여 하나의 코드 블록에 출력
+        # 구분선(% ===...)을 추가하여 시각적 구분을 둠
+        full_converted_tex = "\n\n% ==========================================\n\n".join(items)
+        st.code(full_converted_tex, language='latex')
 
         if st.button("🚀 AI 학술 감사 시작", type="primary"):
             if not st.session_state.api_key: st.error("API Key를 입력해주세요."); st.stop()
