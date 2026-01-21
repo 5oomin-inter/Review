@@ -15,29 +15,24 @@ from pdf2image import convert_from_path
 st.set_page_config(page_title="업무 자동화", layout="wide")
 
 # ==========================================
-# [CSS 스타일: 코드 블록 스크롤 제어 및 자동 줄바꿈]
+# [CSS 스타일: 코드 블록 스크롤 및 텍스트 영역 스타일]
 # ==========================================
 st.markdown("""
     <style>
-    /* 1. 코드 블록(LaTeX 결과물) 스타일링 */
+    /* 1. 뷰어(st.code) 스타일: 자동 줄바꿈 & 세로 스크롤 */
     [data-testid="stCodeBlock"] pre {
-        max-height: 600px !important;       /* 세로 높이 제한 */
-        overflow-y: auto !important;        /* 세로 스크롤 활성화 */
-        
-        /* [추가된 부분] 가로 스크롤 제거 및 자동 줄바꿈 설정 */
-        white-space: pre-wrap !important;   /* 줄바꿈 강제 적용 */
-        word-break: break-word !important;  /* 단어가 길면 잘라서 줄바꿈 */
-        overflow-x: hidden !important;      /* 가로 스크롤바 숨김 */
-    }
-    
-    /* 코드 블록 내부의 code 태그에도 줄바꿈 상속 */
-    [data-testid="stCodeBlock"] code {
+        max-height: 600px !important;
+        overflow-y: auto !important;
         white-space: pre-wrap !important;
+        word-break: break-word !important;
+        overflow-x: hidden !important;
     }
     
-    /* 2. 복사 버튼의 z-index 보장 */
-    [data-testid="stCodeBlock"] button {
-        z-index: 999 !important;
+    /* 2. 에디터(st.text_area) 스타일: 폰트 통일 */
+    .stTextArea textarea {
+        font-family: 'Courier New', Courier, monospace !important;
+        font-size: 14px !important;
+        line-height: 1.5 !important;
     }
 
     /* 3. 버튼 레이아웃 정렬 */
@@ -59,7 +54,7 @@ else:
     POPPLER_PATH = None
 
 # ==========================================
-# [프롬프트] LaTeX ZIP용 (v8.2 - 디자인 강화)
+# [프롬프트] LaTeX ZIP용 (v8.2)
 # ==========================================
 PROMPT_FOR_TEX = """
 # 🏆 종합 학술 감사관 (Scholarly Auditor v8.2)
@@ -282,7 +277,6 @@ def parse_tex_content(tex_content):
     return final_items
 
 def review_tex_section(model, section_text, section_num):
-    """[LaTeX ZIP 전용] Markdown Table 형식 리턴"""
     rule_errors = rule_check_josa(section_text)
     prompt = PROMPT_FOR_TEX + "\n\n---------------------------------------------------------\n[검토할 텍스트]\n" + section_text + "\n---------------------------------------------------------"
     try:
@@ -297,7 +291,6 @@ def generate_report_for_tex(results):
         lines.append(f"\n---")
         lines.append(f"## 📄 문항 세트 {res['section']}\n")
         
-        # 1. Python 규칙 감지 (표로 변환)
         if res.get('rule_errors'):
             lines.append("### 🐍 [Python 규칙 감지] (참고용)")
             lines.append("| 위치 | 오류 내용 | 원문 $\\to$ 수정 제안 |")
@@ -306,7 +299,6 @@ def generate_report_for_tex(results):
                 lines.append(f"| {err['location']} | {err['reason']} | {err['original']} $\\to$ {err['corrected']} |")
             lines.append("\n")
             
-        # 2. AI 감지
         if 'api_error' in res: 
             lines.append(f"⚠️ **API Error:** {res['api_error']}")
         else: 
@@ -382,7 +374,6 @@ def navigate_to(page):
 # [화면 1] 메인 페이지 (LaTeX ZIP 자동화)
 # ==========================================
 def main_page():
-    # 상단 버튼 레이아웃: 타이틀(좌) / 버튼 그룹(우)
     col_title, col_btns = st.columns([7, 3])
     
     with col_title: 
@@ -423,9 +414,19 @@ def main_page():
         
         st.subheader("🔎 문항 전체 보기 (통합)")
         
-        # [수정] 모든 문항을 하나로 합쳐서 출력
+        # [수정] 탭(Tab)을 사용하여 뷰어/에디터 분리
         full_text = "\n\n" + ("="*30) + "\n\n".join(items)
-        st.code(full_text, language='latex')
+        
+        tab1, tab2 = st.tabs(["👁️ 뷰어 (Color)", "✏️ 에디터 (수정)"])
+        
+        with tab1:
+            st.caption("색깔로 구분된 보기 전용 화면입니다. (수정 불가)")
+            st.code(full_text, language='latex')
+            
+        with tab2:
+            st.caption("텍스트를 직접 수정하고 복사할 수 있는 화면입니다. (색깔 없음)")
+            # 에디터는 높이를 넉넉하게 주고, 위에서 정의한 폰트 CSS가 적용됨
+            st.text_area("TeX Editor", value=full_text, height=600, label_visibility="collapsed")
 
         if st.button("🚀 AI 학술 감사 시작", type="primary"):
             if not st.session_state.api_key: st.error("API Key를 입력해주세요."); st.stop()
