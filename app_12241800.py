@@ -387,7 +387,7 @@ def main_page():
     with col_btns:
         c1, c2 = st.columns(2)
         with c1:
-            st.link_button("⏱️ 타이머", "https://integrate-git.github.io/timer/timer.html", use_container_width=True)
+            st.link_button("⏱️ 타이머", "https://integrate-git.github.io/timer/timer_c3.html", use_container_width=True)
         with c2:
             if st.button("2512ver ▶", use_container_width=True): 
                 navigate_to('2512')
@@ -578,3 +578,4 @@ def page_2512():
 
 if st.session_state.current_page == 'main': main_page()
 elif st.session_state.current_page == '2512': page_2512()
+
