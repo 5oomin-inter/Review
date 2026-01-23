@@ -15,7 +15,7 @@ from pdf2image import convert_from_path
 st.set_page_config(page_title="업무 자동화", layout="wide")
 
 # ==========================================
-# [CSS 스타일: 코드 블록 스크롤 제어 및 자동 줄바꿈(강제)]
+# [CSS 스타일: 코드 블록 스크롤 제어 및 자동 줄바꿈]
 # ==========================================
 st.markdown("""
     <style>
@@ -24,7 +24,7 @@ st.markdown("""
         white-space: pre-wrap !important;
         word-break: break-all !important;
         overflow-wrap: break-word !important;
-        max-height: 600px !important;
+        max-height: 400px !important; /* 개별 문항은 너무 길지 않게 */
         overflow-y: auto !important;
         overflow-x: hidden !important;
     }
@@ -96,12 +96,12 @@ PROMPT_FOR_TEX = """
 """
 
 # ==========================================
-# [프롬프트] 2512 PDF용
+# [프롬프트 B] 2512 PDF용 (Legacy)
 # ==========================================
 PROMPT_FOR_PDF = """
 당신은 대한민국 고등학교 수학 교재 전문 교정자입니다.
 아래 텍스트에서 오류를 찾아 JSON으로 출력하세요.
-(기존 기준 생략...)
+(기존 내용 생략...)
 [
     {{
         "original": "문제가 있는 부분",
@@ -199,7 +199,7 @@ def _dedup_errors(errors):
     return out
 
 # ==========================================
-# [로직 A] LaTeX ZIP 처리 (메인용 / 기존 로직 유지)
+# [로직 A] LaTeX ZIP 처리 (메인용)
 # ==========================================
 def extract_tex_from_zip(zip_file_bytes):
     try:
@@ -212,8 +212,8 @@ def extract_tex_from_zip(zip_file_bytes):
             return content, None
     except Exception as e: return None, f"ZIP 처리 오류: {str(e)}"
 
-# [메인 페이지용 구형 파서] - 수정하지 않음 (안전 보장)
 def parse_tex_content(tex_content):
+    # (메인 페이지용 구형 파서 - 그대로 유지)
     pattern = r'\\begin\{document\}([\s\S]*?)\\end\{document\}'
     match = re.search(pattern, tex_content)
     body = match.group(1).strip() if match else tex_content
@@ -263,36 +263,23 @@ def parse_tex_content(tex_content):
     return final_items
 
 # ==========================================
-# [NEW] 개발용 파서 (Line-by-Line 개선 로직)
+# [NEW] 개발용 파서 (Line-by-Line)
 # ==========================================
 def parse_tex_content_dev(tex_content):
-    """
-    [개발용] TeX 내용을 분석하여 (문항 + 해설) 세트로 분리합니다.
-    - 기준: 
-      1. 순수한 숫자(문항 번호)가 등장하면 '새로운 문항' 시작
-      2. \section*{숫자} 형태도 '새로운 문항' 시작
-      3. 그 외(\section*{해설}, 일반 텍스트 등)는 '현재 문항의 해설'로 병합
-    """
-    # 1. 문서 본문 추출
     pattern = r'\\begin\{document\}([\s\S]*?)\\end\{document\}'
     match = re.search(pattern, tex_content)
     body = match.group(1).strip() if match else tex_content
-
-    # 2. 불필요한 LaTeX 명령어 제거
     body = re.sub(r'\\maketitle', '', body)
     body = re.sub(r'\\newpage', '', body)
     body = re.sub(r'\\clearpage', '', body)
     
-    # 3. 줄 단위로 처리
     lines = [line.strip() for line in body.split('\n') if line.strip()]
-    
     items = []
     current_item = []
     
-    # 문항 번호 패턴
+    # 순수 숫자 or \section*{숫자} 패턴
     item_start_pattern_pure_num = re.compile(r'^\d+$')
     item_start_pattern_section_num = re.compile(r'^\\section\*?\{\s*\d+(\s*\\\\)?\s*\}$')
-    
     ignore_keywords = ["Day", "일차"] 
 
     for line in lines:
@@ -312,7 +299,6 @@ def parse_tex_content_dev(tex_content):
     if current_item:
         items.append("\n".join(current_item))
 
-    # 후처리: 너무 짧은 항목(쓰레기 데이터) 제거
     filtered_items = []
     for item in items:
         if len(item) > 10: 
@@ -460,7 +446,6 @@ def main_page():
                 if error:
                     st.error(f"{uploaded_zip.name}: {error}")
                     continue
-                # 메인 페이지는 기존 파서 사용
                 items = parse_tex_content(tex_content)
                 full_text = "\n\n" + ("="*30) + "\n\n".join(items)
                 all_files_data.append({"filename": uploaded_zip.name, "items": items, "full_text": full_text, "index": i})
@@ -475,8 +460,7 @@ def main_page():
                 selected_data = file_options[selected_option]
                 idx = selected_data['index']
                 full_text = selected_data['full_text']
-                items = selected_data['items']
-                st.info(f"✅ '{selected_data['filename']}' 내용 (총 {len(items)}개 문항 세트)")
+                st.info(f"✅ '{selected_data['filename']}' 내용 (총 {len(selected_data['items'])}개 문항 세트)")
                 tab1, tab2 = st.tabs(["👁️ 뷰어 (Color & Wrap)", "✏️ 에디터 (수정)"])
                 with tab1: st.code(full_text, language='latex')
                 with tab2: st.text_area(f"Editor_{idx}", value=full_text, height=600, label_visibility="collapsed")
@@ -548,29 +532,39 @@ def page_dev():
                 if error:
                     st.error(f"{uploaded_zip.name}: {error}")
                     continue
-                # [중요] 개발용에서는 개선된 파서(parse_tex_content_dev) 사용
+                # [Dev] 개선된 파서 사용
                 items = parse_tex_content_dev(tex_content)
-                full_text = "\n\n" + ("="*30) + "\n\n".join(items)
-                all_files_data.append({"filename": uploaded_zip.name, "items": items, "full_text": full_text, "index": i})
+                all_files_data.append({"filename": uploaded_zip.name, "items": items, "index": i})
             status.update(label="모든 파일 준비 완료!", state="complete", expanded=False)
 
         if all_files_data:
             st.divider()
+            # [수정] 파일 선택 Dropdown
             file_options = {f"{data['filename']}": data for data in all_files_data}
             selected_option = st.selectbox("📂 확인하고 싶은 파일을 선택하세요:", list(file_options.keys()), key="dev_selectbox")
             
             if selected_option:
                 selected_data = file_options[selected_option]
-                idx = selected_data['index']
-                full_text = selected_data['full_text']
                 items = selected_data['items']
+                idx = selected_data['index']
+                
                 st.info(f"✅ '{selected_data['filename']}' 내용 (총 {len(items)}개 문항 세트)")
-                tab1, tab2 = st.tabs(["👁️ 뷰어", "✏️ 에디터"])
-                with tab1: st.code(full_text, language='latex')
-                with tab2: st.text_area(f"Editor_Dev_{idx}", value=full_text, height=600, label_visibility="collapsed")
-            
+                st.caption("각 문항 세트별로 분리되어 표시됩니다. 필요한 부분만 복사하세요.")
+
+                # [수정] 문항별 개별 박스 생성
+                for j, item_text in enumerate(items):
+                    with st.expander(f"문항 세트 {j+1} (클릭하여 열기/닫기)", expanded=True):
+                        # 각 문항마다 탭 생성
+                        tab1, tab2 = st.tabs(["👁️ 뷰어", "✏️ 에디터"])
+                        with tab1:
+                            st.code(item_text, language='latex')
+                        with tab2:
+                            # 고유 key: 파일인덱스_문항인덱스
+                            st.text_area(f"Dev_Editor_{idx}_{j}", value=item_text, height=300, label_visibility="collapsed")
+
             st.divider()
             if st.button("🚀 (Dev) AI 감사 시작", type="primary"):
+                # (기존 감사 로직과 동일하되, all_files_data를 사용)
                 if not st.session_state.api_key: st.error("API Key를 입력해주세요."); st.stop()
                 genai.configure(api_key=st.session_state.api_key)
                 model = genai.GenerativeModel('gemini-1.5-flash')
