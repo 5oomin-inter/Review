@@ -550,8 +550,8 @@ def page_dev():
         st.rerun()
     st.divider()
     
-    st.title("🛠️ 개발용 (Test Bed)")
-    st.warning("⚠️ 이곳은 기능 테스트 및 디버깅을 위한 공간입니다. (Line-by-Line 파서 + 문항별 분리 적용)")
+    st.title("🛠️ 테스트 페이지)")
+    st.warning("⚠️ 이곳은 기능 테스트 및 디버깅을 위한 공간입니다. \n문항별 분리(20260123 2200 ver)")
 
     with st.sidebar:
         st.header("⚙️ 설정 (Dev)")
@@ -586,16 +586,16 @@ def page_dev():
                 idx = selected_data['index']
                 
                 st.info(f"✅ '{selected_data['filename']}' 내용 (총 {len(items)}개 문항 세트)")
-                st.caption("각 문항 세트별로 분리되어 표시됩니다. 필요한 부분만 복사하세요.")
+                st.caption("각 문항 별로 분리되어 표시됩니다. 필요한 부분만 복사하세요.")
 
                 # [중요] 문항별 개별 박스 생성 (반복문)
                 for j, item_data in enumerate(items):
-                    item_label = item_data.get('label', f"문항 {j+1}")
+                    item_label = item_data.get('label', f"{j+1}번 문")
                     item_text = item_data.get('content', '')
                     
-                    with st.expander(f"{item_label} (클릭하여 열기/닫기)", expanded=True):
+                    with st.expander(f"{item_label})", expanded=True):
                         # 각 문항마다 탭 생성
-                        tab1, tab2 = st.tabs(["👁️ 뷰어", "✏️ 에디터"])
+                        tab1, tab2 = st.tabs(["🦁LaTeX", "📝메모장st"])
                         with tab1:
                             st.code(item_text, language='latex')
                         with tab2:
@@ -720,3 +720,4 @@ def page_2512():
 if st.session_state.current_page == 'main': main_page()
 elif st.session_state.current_page == '2512': page_2512()
 elif st.session_state.current_page == 'dev': page_dev()
+
