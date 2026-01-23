@@ -64,20 +64,54 @@ else:
 # ==========================================
 PROMPT_FOR_TEX = """
 # 🏆 종합 학술 감사관 (Scholarly Auditor v8.2)
+
 ## 1. 역할
 고등 수학 교육 콘텐츠의 **최종 검증자**로서, 오류를 찾아내어 **깔끔한 표(Table)**로 보고합니다.
-(중략: 기존 프롬프트 유지)
+
+## 2. 출력 형식 (엄수)
+서술형 줄글을 절대 쓰지 마십시오. 오직 **아래의 표 형식**으로만 출력하십시오.
+오류가 없다면 표를 출력하지 말고 "✅ **발견된 오류 없음**"이라고만 쓰십시오.
+
+### [Table A: 학술 감사 보고서] (치명적 오류)
+* **기준:** 수학적 진리값, 정답, 부호, 개념 오류 (확신도 100%)
+| 위치 | 오류 내용 | 원문 $\\to$ 수정 제안 | 근거 및 의견 |
+| :--- | :--- | :--- | :--- |
+| (예: 해설 3행) | (예: 부호 오류) | **[원문]** $f(t)$ <br> $\\downarrow$ <br> **[수정]** $f(-t)$ | y축 대칭이므로 -t 대입 필요 |
+
+### [Table B: 변환 오류 클린업] (단순 수정)
+* **기준:** 띄어쓰기, 오타, 문법, 단순 편집
+| 위치 | 오류 내용 | 원문 $\\to$ 수정 제안 |
+| :--- | :--- | :--- |
+| (예: 문제 1행) | (예: 띄어쓰기) | 3 개를 $\\to$ 3개를 |
+
+### [Table C: 개선 제안] (권장 사항)
+* **기준:** 더 나은 풀이, 가독성, 교육적 제안
+| 위치 | 제안 유형 | 내용 및 의견 |
+| :--- | :--- | :--- |
+| (예: 식 (나)) | (예: 풀이 개선) | 로피탈 정리보다 미분계수 정의를 사용하는 것이 좋습니다. |
+
+## 3. 주의 사항
+1. 각 표의 헤더(Table A, B, C)는 오류가 있을 때만 출력하세요.
+2. 수식은 LaTeX 문법($$)을 유지하세요.
 """
 
 PROMPT_FOR_PDF = """
 당신은 대한민국 고등학교 수학 교재 전문 교정자입니다.
-(중략: 기존 프롬프트 유지)
+아래 텍스트에서 오류를 찾아 JSON으로 출력하세요.
+(기존 프롬프트 생략...)
+[
+    {{
+        "original": "문제가 있는 부분",
+        "corrected": "수정 제안",
+        "reason": "수정 이유",
+        "severity": "high/medium/low"
+    }}
+]
 """
 
 # ==========================================
 # [공통 유틸리티]
 # ==========================================
-# (지면 관계상 핵심 로직 외 기존 함수들은 그대로 유지)
 _JONGSUNG_LIST = ["", "ㄱ", "ㄲ", "ㄳ", "ㄴ", "ㄵ", "ㄶ", "ㄷ", "ㄹ", "ㄺ", "ㄻ", "ㄼ", "ㄽ", "ㄾ", "ㄿ", "ㅀ", "ㅁ", "ㅂ", "ㅄ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"]
 _LATIN_LAST_JONG = {"A": "", "B": "", "C": "", "D": "", "E": "", "F": "", "G": "", "H": "", "I": "", "J": "", "K": "", "L": "ㄹ", "M": "ㅁ", "N": "ㄴ", "O": "", "P": "", "Q": "", "R": "ㄹ", "S": "", "T": "", "U": "", "V": "", "W": "", "X": "", "Y": "", "Z": ""}
 _DIGIT_LAST_JONG = {"0": "ㅇ", "1": "ㄹ", "2": "", "3": "ㅁ", "4": "", "5": "", "6": "ㄱ", "7": "ㄹ", "8": "ㄹ", "9": ""}
@@ -170,7 +204,7 @@ def extract_tex_from_zip(zip_file_bytes):
             return content, None
     except Exception as e: return None, f"ZIP 처리 오류: {str(e)}"
 
-# [메인 페이지용 구형 파서 - 기존 유지]
+# [메인 페이지용 구형 파서 - 유지]
 def parse_tex_content(tex_content):
     pattern = r'\\begin\{document\}([\s\S]*?)\\end\{document\}'
     match = re.search(pattern, tex_content)
@@ -221,11 +255,12 @@ def parse_tex_content(tex_content):
     return final_items
 
 # ==========================================
-# [NEW] 개발용 파서 (Line-by-Line & 문항 감지 강화)
+# [NEW] 개발용 파서 (문항 번호 기준 엄격 분리)
 # ==========================================
 def parse_tex_content_dev(tex_content):
     """
-    [개발용] TeX 내용을 줄 단위로 읽어 (문항 + 해설) 세트로 분리
+    [개발용] TeX 내용을 줄 단위로 읽어 (문항 + 모든 해설) 세트로 분리.
+    오직 '문항 번호'가 나올 때만 세트를 끊습니다.
     """
     # 1. 문서 본문 추출
     pattern = r'\\begin\{document\}([\s\S]*?)\\end\{document\}'
@@ -242,13 +277,14 @@ def parse_tex_content_dev(tex_content):
     
     items = []
     current_item_lines = []
-    current_item_label = "서문/공통" # 첫 번째 덩어리 라벨
+    current_item_label = "서문/공통" 
     
-    # 문항 번호 감지 패턴
-    # 1) 순수 숫자: "28", "29"
-    # 2) 순수 숫자 + 점: "28.", "29."
-    # 3) \section*{숫자} 또는 \section*{ ... \\ 숫자 }
-    # 예: \section*{110 \\ 29} 에서 29를 잡기 위함
+    # [정규식 정의]
+    # 1. 순수 숫자 (예: "28", "29.")
+    regex_pure_num = re.compile(r'^\d+(\.\s*)?$')
+    # 2. 섹션 내의 숫자 (예: \section*{28}, \section*{110 \\ 29})
+    # 주의: \section*{해법} 같은 건 잡히면 안 됨. 오직 숫자, 공백, 줄바꿈(\\)만 허용
+    regex_section_num = re.compile(r'^\\section\*?\{\s*(\d+(\s*\\\\)?\s*)+\}$')
     
     ignore_keywords = ["Day", "일차"] 
 
@@ -257,36 +293,26 @@ def parse_tex_content_dev(tex_content):
         if is_ignore: continue
 
         # --- 문항 시작 판별 로직 ---
-        is_new_question = False
-        question_num = ""
+        is_question_start = False
+        new_label = ""
 
-        # Case A: 줄 자체가 숫자 (예: "28")
-        if re.fullmatch(r'\d+\.?', line):
-            is_new_question = True
-            question_num = line.replace('.', '')
-
-        # Case B: \section*{...} 형태
-        elif line.startswith(r'\section*{'):
-            # 중괄호 안의 내용 추출
-            content = re.sub(r'\\section\*?\{', '', line)
-            content = content.rstrip('}')
+        if regex_pure_num.match(line):
+            is_question_start = True
+            new_label = line.replace('.', '').strip()
             
-            # 1. 숫자로만 구성된 경우 (예: \section*{28})
-            if re.fullmatch(r'\s*\d+\s*', content):
-                is_new_question = True
-                question_num = content.strip()
-            
-            # 2. 줄바꿈(\\) 뒤에 숫자가 있는 경우 (예: \section*{110 \\ 29})
-            elif '\\\\' in content:
-                parts = content.split('\\\\')
-                last_part = parts[-1].strip()
-                if re.fullmatch(r'\d+', last_part):
-                    is_new_question = True
-                    question_num = last_part
+        elif regex_section_num.match(line):
+            # 섹션 내부 텍스트 추출
+            inner_text = re.sub(r'\\section\*?\{', '', line).rstrip('}')
+            # 텍스트가 정말 숫자로만(또는 \\ 포함) 되어 있는지 확인
+            # (이미 regex_section_num이 거르긴 했지만 안전장치)
+            if re.fullmatch(r'[\d\s\\]+', inner_text):
+                is_question_start = True
+                # "110 \\ 29" 같은 경우 마지막 숫자 "29"를 라벨로 사용
+                new_label = inner_text.split(r'\\')[-1].strip()
 
         # --- 분기 처리 ---
-        if is_new_question:
-            # 이전 문항 저장
+        if is_question_start:
+            # 기존에 모으던 내용이 있으면 저장 (이전 문항 세트 완료)
             if current_item_lines:
                 items.append({
                     "label": f"문항 {current_item_label}",
@@ -295,10 +321,10 @@ def parse_tex_content_dev(tex_content):
                 current_item_lines = []
             
             # 새 문항 시작
-            current_item_label = question_num
+            current_item_label = new_label
             current_item_lines.append(line)
         else:
-            # 기존 문항에 계속 추가 (해설 등)
+            # 문항 번호가 아니면 (해설, 개념, 지문 등) 무조건 현재 세트에 추가
             current_item_lines.append(line)
 
     # 마지막 문항 저장
@@ -308,10 +334,10 @@ def parse_tex_content_dev(tex_content):
             "content": "\n".join(current_item_lines)
         })
 
-    # 후처리: 내용이 너무 짧은 항목 제거
+    # 후처리: 내용이 너무 짧은 항목 제거 (쓰레기 데이터)
     valid_items = []
     for item in items:
-        if len(item['content']) > 10:
+        if len(item['content']) > 5:
             valid_items.append(item)
             
     return valid_items
@@ -353,7 +379,6 @@ def generate_report_for_tex(results_grouped_by_file):
 # ==========================================
 # [로직 B] 2512 PDF 처리
 # ==========================================
-# (기존 PDF 처리 로직 유지)
 def process_pdf(model, pdf_path, progress_callback=None):
     try:
         if POPPLER_PATH: pages = convert_from_path(pdf_path, dpi=300, poppler_path=POPPLER_PATH)
@@ -457,7 +482,7 @@ def main_page():
                 if error:
                     st.error(f"{uploaded_zip.name}: {error}")
                     continue
-                # 메인 페이지는 기존 파서 사용 (item이 단순 문자열 리스트임)
+                # 메인 페이지는 기존 파서 사용 (통합 텍스트 출력)
                 items = parse_tex_content(tex_content)
                 full_text = "\n\n" + ("="*30) + "\n\n".join(items)
                 all_files_data.append({"filename": uploaded_zip.name, "items": items, "full_text": full_text, "index": i})
