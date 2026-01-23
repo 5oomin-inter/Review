@@ -552,7 +552,7 @@ def page_dev():
     
     st.title("🛠️ 테스트 페이지")
     st.warning("""⚠️ 이곳은 기능 테스트 및 디버깅을 위한 공간입니다.  
-&nbsp;&nbsp;&nbsp;&nbsp;1. 문항별 분리: 개발 능력 부족으로 문항끼리 분리되지 않을 수 있습니다. 문항 번호가 맞는지 확인하고, 필요한 부분만 복사하세요.""")
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. 문항별 분리: 문항끼리 분리되지 않을 수 있습니다. 문항 번호가 맞는지 확인하고, 필요한 부분만 복사하세요.""")
 
     with st.sidebar:
         st.header("⚙️ 설정 (Dev)")
@@ -593,7 +593,7 @@ def page_dev():
                     item_label = item_data.get('label', f"{j+1}")
                     item_text = item_data.get('content', '')
                     
-                    with st.expander(f"{item_label})", expanded=True):
+                    with st.expander(f"{item_label}", expanded=True):
                         # 각 문항마다 탭 생성
                         tab1, tab2 = st.tabs(["🦁LaTeX", "📝메모장st"])
                         with tab1:
@@ -720,6 +720,7 @@ def page_2512():
 if st.session_state.current_page == 'main': main_page()
 elif st.session_state.current_page == '2512': page_2512()
 elif st.session_state.current_page == 'dev': page_dev()
+
 
 
 
