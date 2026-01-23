@@ -315,7 +315,7 @@ def parse_tex_content_dev(tex_content):
             # 기존에 모으던 내용이 있으면 저장 (이전 문항 세트 완료)
             if current_item_lines:
                 items.append({
-                    "label": f"문항 {current_item_label}",
+                    "label": f"{current_item_label}번 문항",
                     "content": "\n".join(current_item_lines)
                 })
                 current_item_lines = []
@@ -551,7 +551,8 @@ def page_dev():
     st.divider()
     
     st.title("🛠️ 테스트 페이지")
-    st.warning("⚠️ 이곳은 기능 테스트 및 디버깅을 위한 공간입니다.  \n문항별 분리(20260123 2200 ver)")
+    st.warning("""⚠️ 이곳은 기능 테스트 및 디버깅을 위한 공간입니다.  
+&nbsp;&nbsp;&nbsp;&nbsp;1. 문항별 분리: 개발 능력 부족으로 문항끼리 분리되지 않을 수 있습니다. 문항 번호가 맞는지 확인하고, 필요한 부분만 복사하세요.""")
 
     with st.sidebar:
         st.header("⚙️ 설정 (Dev)")
@@ -585,12 +586,11 @@ def page_dev():
                 items = selected_data['items'] # 딕셔너리 리스트
                 idx = selected_data['index']
                 
-                st.info(f"✅ '{selected_data['filename']}' 내용 (총 {len(items)}개 문항 세트)")
-                st.caption("기술적 한계로 문항끼리 분리되지 않을 수 있습니다. 문항 번호가 맞는지 확인하고, 필요한 부분만 복사하세요.")
+                st.caption(f"✅ '{selected_data['filename']}' 내용 (총 {len(items)}개 문항 세트)")
 
                 # [중요] 문항별 개별 박스 생성 (반복문)
                 for j, item_data in enumerate(items):
-                    item_label = item_data.get('label', f"{j+1}번 문항")
+                    item_label = item_data.get('label', f"{j+1}")
                     item_text = item_data.get('content', '')
                     
                     with st.expander(f"{item_label})", expanded=True):
@@ -720,5 +720,6 @@ def page_2512():
 if st.session_state.current_page == 'main': main_page()
 elif st.session_state.current_page == '2512': page_2512()
 elif st.session_state.current_page == 'dev': page_dev()
+
 
 
