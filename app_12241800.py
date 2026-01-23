@@ -550,8 +550,8 @@ def page_dev():
         st.rerun()
     st.divider()
     
-    st.title("🛠️ 테스트 페이지)")
-    st.warning("⚠️ 이곳은 기능 테스트 및 디버깅을 위한 공간입니다. \n문항별 분리(20260123 2200 ver)")
+    st.title("🛠️ 테스트 페이지")
+    st.warning("⚠️ 이곳은 기능 테스트 및 디버깅을 위한 공간입니다.  \n문항별 분리(20260123 2200 ver)")
 
     with st.sidebar:
         st.header("⚙️ 설정 (Dev)")
@@ -559,7 +559,7 @@ def page_dev():
         api_input = st.text_input("Google API Key", value=st.session_state.api_key, type="password")
         st.session_state.api_key = api_input
     
-    uploaded_zips = st.file_uploader("ZIP 파일 업로드 (Dev)", type=["zip"], accept_multiple_files=True, key="dev_uploader")
+    uploaded_zips = st.file_uploader("ZIP 파일 업로드", type=["zip"], accept_multiple_files=True, key="dev_uploader")
     all_files_data = []
 
     if uploaded_zips:
@@ -578,7 +578,7 @@ def page_dev():
         if all_files_data:
             st.divider()
             file_options = {f"{data['filename']}": data for data in all_files_data}
-            selected_option = st.selectbox("📂 확인하고 싶은 파일을 선택하세요:", list(file_options.keys()), key="dev_selectbox")
+            selected_option = st.selectbox("📂 확인하고 싶은 파일 이름 선택", list(file_options.keys()), key="dev_selectbox")
             
             if selected_option:
                 selected_data = file_options[selected_option]
@@ -586,11 +586,11 @@ def page_dev():
                 idx = selected_data['index']
                 
                 st.info(f"✅ '{selected_data['filename']}' 내용 (총 {len(items)}개 문항 세트)")
-                st.caption("각 문항 별로 분리되어 표시됩니다. 필요한 부분만 복사하세요.")
+                st.caption("기술적 한계로 문항끼리 분리되지 않을 수 있습니다. 문항 번호가 맞는지 확인하고, 필요한 부분만 복사하세요.")
 
                 # [중요] 문항별 개별 박스 생성 (반복문)
                 for j, item_data in enumerate(items):
-                    item_label = item_data.get('label', f"{j+1}번 문")
+                    item_label = item_data.get('label', f"{j+1}번 문항")
                     item_text = item_data.get('content', '')
                     
                     with st.expander(f"{item_label})", expanded=True):
@@ -720,4 +720,5 @@ def page_2512():
 if st.session_state.current_page == 'main': main_page()
 elif st.session_state.current_page == '2512': page_2512()
 elif st.session_state.current_page == 'dev': page_dev()
+
 
