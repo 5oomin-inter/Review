@@ -287,15 +287,11 @@ def review_tex_section(model, section_text, section_num):
 
 def generate_report_for_tex(results_grouped_by_file):
     lines = ["# 🏆 종합 학술 감사 보고서\n"]
-    
-    # results_grouped_by_file는 { "filename": [results...], ... } 형태여야 함
     for filename, results in results_grouped_by_file.items():
         lines.append(f"\n# 📁 파일: {filename}")
         lines.append("---")
-        
         for res in results:
             lines.append(f"\n## 📄 문항 세트 {res['section']}")
-            
             if res.get('rule_errors'):
                 lines.append("### 🐍 [Python 규칙 감지] (참고용)")
                 lines.append("| 위치 | 오류 내용 | 원문 $\\to$ 수정 제안 |")
@@ -303,13 +299,11 @@ def generate_report_for_tex(results_grouped_by_file):
                 for err in res['rule_errors']:
                     lines.append(f"| {err['location']} | {err['reason']} | {err['original']} $\\to$ {err['corrected']} |")
                 lines.append("\n")
-                
             if 'api_error' in res: 
                 lines.append(f"⚠️ **API Error:** {res['api_error']}")
             else: 
                 lines.append(res['ai_report_text'])
             lines.append("\n---")
-            
     return "\n".join(lines)
 
 
@@ -378,17 +372,22 @@ def navigate_to(page):
     st.session_state.current_page = page
 
 # ==========================================
-# [화면 1] 메인 페이지 (LaTeX ZIP 자동화)
+# [화면 1] 메인 페이지 (운영용)
 # ==========================================
 def main_page():
-    col_title, col_btns = st.columns([7, 3])
+    col_title, col_btns = st.columns([6, 4])
     with col_title: 
         st.title("업무 자동화 (LaTeX ZIP)")
     with col_btns:
-        c1, c2 = st.columns(2)
+        c1, c2, c3 = st.columns(3)
         with c1:
             st.link_button("⏱️ 타이머", "https://integrate-git.github.io/timer/timer_c3.html", use_container_width=True)
         with c2:
+            # [개발용] 버튼 추가
+            if st.button("🛠️ 개발용", use_container_width=True):
+                navigate_to('dev')
+                st.rerun()
+        with c3:
             if st.button("2512ver ▶", use_container_width=True): 
                 navigate_to('2512')
                 st.rerun()
@@ -404,91 +403,56 @@ def main_page():
         api_input = st.text_input("Google API Key", value=st.session_state.api_key, type="password")
         st.session_state.api_key = api_input
     
-    # 다중 파일 업로드 허용
     uploaded_zips = st.file_uploader("ZIP 파일 업로드 (.zip)", type=["zip"], accept_multiple_files=True)
-    
-    # 처리할 모든 작업 데이터를 저장할 리스트
     all_files_data = []
 
     if uploaded_zips:
-        # [수정] 파일 처리 과정을 상태 바(Status)로 묶어서 보여줌
         with st.status("파일 분석 및 추출 중...", expanded=True) as status:
             for i, uploaded_zip in enumerate(uploaded_zips):
                 status.write(f"📂 분석 중: {uploaded_zip.name}")
                 tex_content, error = extract_tex_from_zip(uploaded_zip)
-                
                 if error:
                     st.error(f"{uploaded_zip.name}: {error}")
                     continue
-                
                 items = parse_tex_content(tex_content)
                 full_text = "\n\n" + ("="*30) + "\n\n".join(items)
-                
-                # 분석 결과를 리스트에 저장
-                all_files_data.append({
-                    "filename": uploaded_zip.name,
-                    "items": items,
-                    "full_text": full_text,
-                    "index": i
-                })
-            
+                all_files_data.append({"filename": uploaded_zip.name, "items": items, "full_text": full_text, "index": i})
             status.update(label="모든 파일 준비 완료!", state="complete", expanded=False)
 
-        # [수정] 파일이 하나라도 처리되었으면 드롭다운으로 선택
         if all_files_data:
             st.divider()
-            
-            # 드롭다운 옵션 생성 (파일명 리스트)
             file_options = {f"{data['filename']}": data for data in all_files_data}
             selected_option = st.selectbox("📂 확인하고 싶은 파일을 선택하세요:", list(file_options.keys()))
             
-            # 선택된 파일 데이터 가져오기
             if selected_option:
                 selected_data = file_options[selected_option]
                 idx = selected_data['index']
                 full_text = selected_data['full_text']
                 items = selected_data['items']
-
                 st.info(f"✅ '{selected_data['filename']}' 내용 (총 {len(items)}개 문항 세트)")
-
-                # 뷰어/에디터 탭 생성
                 tab1, tab2 = st.tabs(["👁️ 뷰어 (Color & Wrap)", "✏️ 에디터 (수정)"])
-                
-                with tab1:
-                    st.code(full_text, language='latex')
-                with tab2:
-                    # 파일별 고유 Key를 사용하여 에디터 상태 유지
-                    st.text_area(f"Editor_{idx}", value=full_text, height=600, label_visibility="collapsed")
+                with tab1: st.code(full_text, language='latex')
+                with tab2: st.text_area(f"Editor_{idx}", value=full_text, height=600, label_visibility="collapsed")
             
-            # AI 감사 버튼 (전체 파일 일괄 처리)
             st.divider()
             if st.button("🚀 전체 파일 AI 학술 감사 시작", type="primary"):
                 if not st.session_state.api_key: st.error("API Key를 입력해주세요."); st.stop()
-                
                 genai.configure(api_key=st.session_state.api_key)
                 model = genai.GenerativeModel('gemini-1.5-flash')
-
                 progress_bar = st.progress(0)
                 status_text = st.empty()
-                
-                # 전체 작업량 계산
                 total_tasks = sum(len(f['items']) for f in all_files_data)
                 current_task_idx = 0
-                
-                # 결과 저장용: { "파일명": [결과들...] }
                 results_by_file = {}
 
                 for file_data in all_files_data:
                     filename = file_data['filename']
                     items = file_data['items']
                     file_results = []
-                    
                     status_text.text(f"📂 {filename} 검토 중...")
-                    
                     for j, item_text in enumerate(items):
                         current_task_idx += 1
                         progress_bar.progress(current_task_idx / total_tasks)
-                        
                         max_retries = 3; retry_delay = 5
                         for attempt in range(max_retries):
                             result = review_tex_section(model, item_text, j + 1)
@@ -499,16 +463,102 @@ def main_page():
                             file_results.append(result)
                             break
                         time.sleep(2) 
-                    
                     results_by_file[filename] = file_results
                 
                 report = generate_report_for_tex(results_by_file)
-                
                 st.divider()
                 st.subheader("📋 통합 감사 결과 보고서")
                 st.markdown(report)
                 st.download_button("📥 리포트 다운로드", report, file_name="integrated_auditor_report.md")
                 st.success("모든 파일의 검토가 완료되었습니다!")
+
+# ==========================================
+# [화면 3] 개발용 페이지 (Dev Mode)
+# ==========================================
+def page_dev():
+    if st.button("← 메인으로 돌아가기"):
+        navigate_to('main')
+        st.rerun()
+    st.divider()
+    
+    st.title("🛠️ 개발용 (Test Bed)")
+    st.warning("⚠️ 이곳은 기능 테스트 및 디버깅을 위한 공간입니다.")
+
+    with st.sidebar:
+        st.header("⚙️ 설정 (Dev)")
+        if 'api_key' not in st.session_state: st.session_state.api_key = DEFAULT_API_KEY
+        api_input = st.text_input("Google API Key", value=st.session_state.api_key, type="password")
+        st.session_state.api_key = api_input
+    
+    # [Dev] 메인 페이지와 동일한 로직 복사 (필요 시 여기서만 수정하여 테스트)
+    uploaded_zips = st.file_uploader("ZIP 파일 업로드 (Dev)", type=["zip"], accept_multiple_files=True, key="dev_uploader")
+    all_files_data = []
+
+    if uploaded_zips:
+        with st.status("파일 분석 및 추출 중...", expanded=True) as status:
+            for i, uploaded_zip in enumerate(uploaded_zips):
+                status.write(f"📂 분석 중: {uploaded_zip.name}")
+                tex_content, error = extract_tex_from_zip(uploaded_zip)
+                if error:
+                    st.error(f"{uploaded_zip.name}: {error}")
+                    continue
+                items = parse_tex_content(tex_content)
+                full_text = "\n\n" + ("="*30) + "\n\n".join(items)
+                all_files_data.append({"filename": uploaded_zip.name, "items": items, "full_text": full_text, "index": i})
+            status.update(label="모든 파일 준비 완료!", state="complete", expanded=False)
+
+        if all_files_data:
+            st.divider()
+            file_options = {f"{data['filename']}": data for data in all_files_data}
+            selected_option = st.selectbox("📂 확인하고 싶은 파일을 선택하세요:", list(file_options.keys()), key="dev_selectbox")
+            
+            if selected_option:
+                selected_data = file_options[selected_option]
+                idx = selected_data['index']
+                full_text = selected_data['full_text']
+                items = selected_data['items']
+                st.info(f"✅ '{selected_data['filename']}' 내용 (총 {len(items)}개 문항 세트)")
+                tab1, tab2 = st.tabs(["👁️ 뷰어", "✏️ 에디터"])
+                with tab1: st.code(full_text, language='latex')
+                with tab2: st.text_area(f"Editor_Dev_{idx}", value=full_text, height=600, label_visibility="collapsed")
+            
+            st.divider()
+            if st.button("🚀 (Dev) AI 감사 시작", type="primary"):
+                if not st.session_state.api_key: st.error("API Key를 입력해주세요."); st.stop()
+                genai.configure(api_key=st.session_state.api_key)
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                progress_bar = st.progress(0)
+                status_text = st.empty()
+                total_tasks = sum(len(f['items']) for f in all_files_data)
+                current_task_idx = 0
+                results_by_file = {}
+
+                for file_data in all_files_data:
+                    filename = file_data['filename']
+                    items = file_data['items']
+                    file_results = []
+                    status_text.text(f"📂 {filename} 검토 중...")
+                    for j, item_text in enumerate(items):
+                        current_task_idx += 1
+                        progress_bar.progress(current_task_idx / total_tasks)
+                        max_retries = 3; retry_delay = 5
+                        for attempt in range(max_retries):
+                            result = review_tex_section(model, item_text, j + 1)
+                            if "api_error" in result and "429" in str(result["api_error"]):
+                                if attempt < max_retries - 1:
+                                    time.sleep(retry_delay); retry_delay *= 2
+                                    continue
+                            file_results.append(result)
+                            break
+                        time.sleep(2) 
+                    results_by_file[filename] = file_results
+                
+                report = generate_report_for_tex(results_by_file)
+                st.divider()
+                st.subheader("📋 통합 감사 결과 보고서 (Dev)")
+                st.markdown(report)
+                st.download_button("📥 리포트 다운로드", report, file_name="dev_report.md")
+                st.success("테스트 완료!")
 
 # ==========================================
 # [화면 2] 2512 페이지 (Legacy PDF)
@@ -576,6 +626,9 @@ def page_2512():
             finally:
                 if os.path.exists(tmp_path): os.remove(tmp_path)
 
+# ==========================================
+# [앱 실행 진입점]
+# ==========================================
 if st.session_state.current_page == 'main': main_page()
 elif st.session_state.current_page == '2512': page_2512()
-
+elif st.session_state.current_page == 'dev': page_dev() # [추가] dev 페이지 연결
