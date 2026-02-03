@@ -360,7 +360,7 @@ def generate_report_for_tex(results_grouped_by_file):
         lines.append(f"\n# 📁 파일: {filename}")
         lines.append("---")
         for res in results:
-            lines.append(f"\n## 📄 {res.get('label', f'문항 세트 {res['section']}')}")
+            lines.append(f"\n## 📄 {res.get('label', '문항 세트 ' + str(res['section']))}")
             if res.get('rule_errors'):
                 lines.append("### 🐍 [Python 규칙 감지] (참고용)")
                 lines.append("| 위치 | 오류 내용 | 원문 $\\to$ 수정 제안 |")
@@ -720,6 +720,7 @@ def page_2512():
 if st.session_state.current_page == 'main': main_page()
 elif st.session_state.current_page == '2512': page_2512()
 elif st.session_state.current_page == 'dev': page_dev()
+
 
 
 
