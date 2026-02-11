@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>한완기 실전편 분석 페이지 가이드</title>
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.css">
-    
+    <title>2026.6 평가원 분석 리포트 가이드</title>
     <style>
+        /* 글로벌 스타일 (Apple 특유의 폰트 및 배경색 차용) */
         body {
             margin: 0;
             padding: 0;
@@ -139,6 +137,35 @@
             margin-bottom: 8px;
         }
 
+        /* 하단 콜투액션(버튼) 영역 */
+        .footer-cta {
+            text-align: center;
+            margin-top: 60px;
+            padding: 40px;
+            background-color: #ffffff;
+            border-radius: 18px;
+        }
+
+        .footer-cta h3 {
+            font-size: 24px;
+            margin-top: 0;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: #0071e3;
+            color: #ffffff;
+            padding: 14px 28px;
+            border-radius: 980px;
+            text-decoration: none;
+            font-size: 17px;
+            font-weight: 400;
+            margin-top: 15px;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn:hover { background-color: #0077ed; }
+
         .tip-box {
             background-color: #f5f5f7;
             padding: 15px 20px;
@@ -146,21 +173,6 @@
             font-size: 15px;
             margin-top: 20px;
             color: #1d1d1f;
-        }
-
-        /* 이미지 호버 효과 (클릭할 수 있다는 인지 부여) */
-        .zoomable-image {
-            max-width: 100%;
-            height: auto;
-            border-radius: 12px;
-            margin: 15px 0;
-            border: 1px solid #e5e5ea;
-            cursor: zoom-in;
-            transition: opacity 0.2s ease;
-        }
-
-        .zoomable-image:hover {
-            opacity: 0.9;
         }
 
         /* 모바일 반응형 처리 */
@@ -175,27 +187,26 @@
 
     <header>
         <div class="nav-container">
-            <a href="#" class="nav-logo">Integrate</a>
+            <a href="#" class="nav-logo">평가원 분석 리포트 지원센터</a>
             <div class="nav-links">
-                <a href="https://integrate-git.github.io/timer/timer.html">타이머</a>
-                <a href="https://m.cafe.naver.com/ca-fe/web/cafes/23380319/menus/427">이해원연구소 Q&A</a>
+                <a href="#">가이드 홈</a>
+                <a href="#">자료실</a>
             </div>
         </div>
     </header>
 
     <section class="hero">
-        <h1>한완기 실전편 분석 페이지 가이드</h1>
-        <p>분석 활용 가이드에 대한 설명</p>
+        <h1>2026.6 평가원 분석 리포트 사용 가이드</h1>
+        <p>시험 당일의 기억을 가장 완벽한 데이터로 바꾸는 4단계 복기 가이드. 4페이지로 구성된 리포트를 200% 활용하는 방법을 알아보세요.</p>
     </section>
 
     <main class="container">
         
         <div class="guide-card">
             <details>
-                <summary>1. 시험 운용 및 약점 파악</summary>
+                <summary>1. 시험 운용 및 약점 파악 (1페이지)</summary>
                 <div class="details-content">
                     <p>나의 시험 운용 흐름을 객관적으로 돌아보고, 단원별로 뚫려있는 개념 구멍을 찾아내는 첫걸음입니다.</p>
-                
                     <h4>타임라인 기록</h4>
                     <ul>
                         <li>목표 타임라인과 나의 실제 타임라인을 대조해 보세요.</li>
@@ -203,30 +214,22 @@
                     </ul>
                     <h4>단원별 자가 점검표</h4>
                     <ul>
-                        <li>수학Ⅰ, 수학Ⅱ, 선택과목(미적분/확률과 통계) 표에 틀린 문항(X), 풀지 못한 문항(☆)을 표시하세요.</li>
+                        <li>수학Ⅰ, 수학Ⅱ, 선택과목(미적분/확률과 통계) 표에 맞힌 문항(O), 틀린 문항(X), 헷갈린 문항(△)을 표시하세요.</li>
                         <li>표시된 결과를 바탕으로 나의 취약 단원을 시각화할 수 있습니다.</li>
                     </ul>
-                    <div class="tip-box">
-                        💡 <strong>활용 팁:</strong> 1페이지의 '복습 노트' 영역에는 해설지에 수록된 Turning-Point를 참고하여, 스스로 다시 풀 수 있게 된 과정을 반드시 직접 적어보세요.
-                    </div>
-                    <h4>복습 노트</h4>
-                    <ul>
-                        <li>복습 단계에서 학습한 내용을 간단하게 기록하세요.</li>
-                        <li>아래의 사진은 작성 예시입니다.</li>
-                    </ul>
-                    <img id="example-image" class="zoomable-image" src="example.png" alt="분석 페이지 작성 예시">
                 </div>
             </details>
         </div>
 
         <div class="guide-card">
             <details>
-                <summary>2. 해당 시험의 총평 및 보정 등급컷</summary>
+                <summary>2. 전체 난이도 및 객관적 위치 가늠 (2페이지)</summary>
                 <div class="details-content">
                     <p>출제자의 의도를 읽고, 이번 시험의 전체적인 난이도 속에서 나의 현재 위치를 정확히 파악합니다.</p>
                     <h4>총평 읽기</h4>
                     <ul>
                         <li>공통과목과 선택과목의 체감 난이도를 확인하세요.</li>
+                        <li>내가 어려웠던 부분이 남들도 어려웠던 킬러 문항이었는지, 혹은 나만의 약점이었는지 대조해 봅니다.</li>
                     </ul>
                     <h4>한눈에 보는 등급컷</h4>
                     <ul>
@@ -239,7 +242,7 @@
 
         <div class="guide-card">
             <details>
-                <summary>3. 문항별 출제 의도 및 상세 분석</summary>
+                <summary>3. 문항별 출제 의도 및 상세 분석 (3페이지)</summary>
                 <div class="details-content">
                     <p>단순한 문제 풀이를 넘어, 평가원이 어떤 개념을 묻고자 했는지 개별 문항의 뼈대를 해부합니다.</p>
                     <h4>문항 구성표</h4>
@@ -257,45 +260,32 @@
 
         <div class="guide-card">
             <details>
-                <summary>4. 수준별 맞춤 학습 전략 수립</summary>
+                <summary>4. 수준별 맞춤 학습 전략 수립 (4페이지)</summary>
                 <div class="details-content">
-                    <p>현재 나의 등급대에서 다음 시험을 위해 당장 실천해야 할 구체적인 행동 강령을 제시합니다.</p>
+                    <p>완벽한 복기의 완성입니다. 현재 나의 등급대에서 다음 시험을 위해 당장 실천해야 할 구체적인 행동 강령을 제시합니다.</p>
                     <h4>목표 등급별 복기 포인트</h4>
                     <ul>
                         <li>1등급, 2등급, 3등급 등 나의 현재 수준과 목표 수준에 맞는 박스를 찾아 정독하세요.</li>
                     </ul>
                     <h4>선택과목별 전략 적용</h4>
                     <ul>
+                        <li>미적분과 확률과 통계는 집중해야 할 포인트가 다릅니다. (예: 대수적 방정식 세우기 vs 케이스 분류하기)</li>
                         <li>가이드에 맞춰 다음 복습 계획과 기출 학습 방향을 설정하세요.</li>
                     </ul>
+                    <div class="tip-box">
+                        💡 <strong>활용 팁:</strong> 1페이지의 '복습 노트' 영역에는 해설지에 수록된 Turning-Point를 참고하여, 스스로 다시 풀 수 있게 된 과정을 반드시 직접 적어보세요.
+                    </div>
                 </div>
             </details>
         </div>
 
-    </main>
+        <div class="footer-cta">
+            <h3>모든 준비가 끝났나요?</h3>
+            <p>분석 리포트를 인쇄하여 펜을 들고 직접 기록을 시작해 보세요.</p>
+            <a href="#" class="btn">분석 리포트 PDF 다운로드</a>
+        </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.js"></script>
-    <script>
-        // DOM(페이지) 로드가 완료된 후 실행되도록 설정
-        document.addEventListener('DOMContentLoaded', function() {
-            // 이미지를 선택하고 뷰어 옵션 설정
-            const image = document.getElementById('example-image');
-            const viewer = new Viewer(image, {
-                inline: false,       // 페이지 안이 아닌 화면 전체를 덮는 모달 형태로 띄움
-                button: true,        // 우측 상단 닫기 버튼 표시
-                navbar: false,       // 하단 썸네일 네비게이션 숨김 (단일 이미지이므로 불필요)
-                title: false,        // 이미지 제목 숨김
-                toolbar: false,      // 모바일 친화성을 위해 하단 조작 버튼(확대/축소 등) 숨김. 터치 핀치줌으로 해결
-                tooltip: false,      // 확대 비율 툴팁 숨김
-                movable: true,       // 드래그(스와이프)로 이동 가능
-                zoomable: true,      // 핀치줌(두 손가락 확대/축소) 활성화
-                rotatable: false,    // 회전 기능 비활성화
-                scalable: false,     // 반전 기능 비활성화
-                transition: true,    // 부드러운 애니메이션 효과
-                fullscreen: false    // 브라우저 전체화면 API 사용 안함 (모바일 호환성을 위해)
-            });
-        });
-    </script>
+    </main>
 
 </body>
 </html>
