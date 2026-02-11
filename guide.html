@@ -39,7 +39,9 @@
         }
 
         .nav-logo { color: #1d1d1f; text-decoration: none; font-size: 18px; cursor: pointer; }
-        .nav-links a { color: #0066cc; text-decoration: none; margin-left: 20px; cursor: pointer; }
+        
+        /* 💡 모바일 환경을 고려해 여백을 살짝 줄였습니다 */
+        .nav-links a { color: #0066cc; text-decoration: none; margin-left: 16px; cursor: pointer; }
         .nav-links a:hover { text-decoration: underline; }
         .nav-links a.active { color: #1d1d1f; text-decoration: underline; text-underline-offset: 4px; }
 
@@ -184,6 +186,7 @@
             .hero h1 { font-size: 32px; }
             .hero p { font-size: 18px; }
             summary, .guide-card h3 { font-size: 19px; }
+            .nav-links a { margin-left: 12px; font-size: 13px; } /* 모바일에서 메뉴 겹침 방지 */
         }
     </style>
 </head>
@@ -192,17 +195,20 @@
     <header>
         <div class="nav-container">
             <a id="nav-logo" class="nav-logo">Integrate</a>
+            
             <div class="nav-links">
-                <a id="btn-analysis">분석 페이지</a>
-                <a href="https://integrate-git.github.io/timer/timer.html">타이머</a>
-                <a href="https://m.cafe.naver.com/ca-fe/web/cafes/23380319/menus/427">이해원연구소 Q&A</a>
+                <a id="btn-main" class="active">등급컷</a>
+                <a id="btn-analysis">분석</a>
+                <a href="https://integrate-git.github.io/timer/timer.html" target="_blank">타이머</a>
+                <a href="https://m.cafe.naver.com/ca-fe/web/cafes/23380319/menus/427" target="_blank">Q&A</a>
             </div>
+            
         </div>
     </header>
 
     <div id="view-main" class="view-section active">
         <section class="hero">
-            <h1>📊한눈에 보는 등급컷 활용법</h1>
+            <h1>📊 [학습 가이드]<br>'한눈에 보는 등급컷' 200% 활용법</h1>
             <p>기출문제를 풀고 채점한 뒤, <br>"지금 내 원점수면 수능에서 몇 등급일까?" 궁금하셨죠?<br>아래의 그래프를 정확히 읽고 나의 약점을 보완하는 방법을 알려드릴게요!</p>
             
             <img id="score-image" class="content-image" src="score.png" alt="한눈에 보는 등급컷">
@@ -339,20 +345,25 @@
             const viewMain = document.getElementById('view-main');
             const viewAnalysis = document.getElementById('view-analysis');
             const btnLogo = document.getElementById('nav-logo');
+            
+            // 💡 새롭게 추가된 버튼 요소 불러오기
+            const btnMain = document.getElementById('btn-main');
             const btnAnalysis = document.getElementById('btn-analysis');
 
             function switchView(targetView) {
-                // 모든 뷰 숨기기
+                // 모든 뷰 및 버튼 활성화 상태 초기화
                 viewMain.classList.remove('active');
                 viewAnalysis.classList.remove('active');
+                btnMain.classList.remove('active');
                 btnAnalysis.classList.remove('active');
 
-                // 타겟 뷰 보이기
+                // 타겟 뷰 보이기 및 해당 버튼 활성화 처리
                 if(targetView === 'main') {
                     viewMain.classList.add('active');
+                    btnMain.classList.add('active');
                 } else if(targetView === 'analysis') {
                     viewAnalysis.classList.add('active');
-                    btnAnalysis.classList.add('active'); // 네비게이션 활성화 표시
+                    btnAnalysis.classList.add('active'); 
                 }
             }
 
@@ -362,13 +373,18 @@
                 switchView('main');
             });
 
-            // 분석 페이지 버튼 클릭 시
+            // 💡 등급컷 버튼 클릭 시 메인(등급컷) 뷰로 이동
+            btnMain.addEventListener('click', (e) => {
+                e.preventDefault();
+                switchView('main');
+            });
+
+            // 분석 버튼 클릭 시 분석 뷰로 이동
             btnAnalysis.addEventListener('click', (e) => {
                 e.preventDefault();
                 switchView('analysis');
             });
             
-            // 줌 관련 스크립트 삭제 완료 (기본 브라우저 줌 활성화)
         });
     </script>
 
