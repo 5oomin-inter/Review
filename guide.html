@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>한완기 실전편 분석 페이지 가이드</title>
+    
     <style>
         body {
             margin: 0;
@@ -37,25 +38,26 @@
             font-weight: 600;
         }
 
-        .nav-logo { color: #1d1d1f; text-decoration: none; font-size: 18px; }
-        .nav-links a { color: #0066cc; text-decoration: none; margin-left: 20px; }
+        .nav-logo { color: #1d1d1f; text-decoration: none; font-size: 18px; cursor: pointer; }
+        .nav-links a { color: #0066cc; text-decoration: none; margin-left: 20px; cursor: pointer; }
         .nav-links a:hover { text-decoration: underline; }
+        .nav-links a.active { color: #1d1d1f; text-decoration: underline; text-underline-offset: 4px; }
 
-        /* 히어로 섹션 (메인 타이틀) */
+        /* 히어로 섹션 */
         .hero {
             text-align: center;
             padding: 80px 20px 50px;
         }
 
         .hero h1 {
-            font-size: 48px;
+            font-size: 42px;
             font-weight: 700;
             letter-spacing: -0.015em;
             margin: 0 0 15px 0;
         }
 
         .hero p {
-            font-size: 21px;
+            font-size: 20px;
             color: #86868b;
             max-width: 680px;
             margin: 0 auto;
@@ -69,11 +71,26 @@
             padding: 0 20px 80px;
         }
 
-        /* 아코디언 메뉴 스타일 (카드형) */
+        /* 화면 전환을 위한 클래스 */
+        .view-section {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 카드 스타일 */
         .guide-card {
             background-color: #ffffff;
             border-radius: 18px;
-            padding: 10px 30px;
+            padding: 20px 30px;
             margin-bottom: 24px;
             box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
             transition: box-shadow 0.3s ease;
@@ -83,10 +100,33 @@
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
         }
 
-        details {
-            padding: 15px 0;
+        .guide-card h3 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            color: #1d1d1f;
         }
 
+        .guide-card p {
+            font-size: 17px;
+            color: #515154;
+            margin-bottom: 15px;
+        }
+
+        .guide-card ul {
+            padding-left: 20px;
+            margin-bottom: 15px;
+            color: #515154;
+            font-size: 17px;
+        }
+
+        .guide-card li {
+            margin-bottom: 8px;
+        }
+
+        /* 아코디언 메뉴 관련 */
+        details { padding: 5px 0; }
         summary {
             font-size: 22px;
             font-weight: 600;
@@ -97,8 +137,6 @@
             justify-content: space-between;
             outline: none;
         }
-
-        /* 기본 화살표 숨기기 및 커스텀 아이콘 설정 */
         summary::-webkit-details-marker { display: none; }
         summary::after {
             content: '+';
@@ -107,78 +145,53 @@
             font-weight: 400;
             transition: transform 0.3s ease;
         }
-        
-        details[open] summary::after {
-            content: '−';
-        }
+        details[open] summary::after { content: '−'; }
 
-        /* 아코디언 펼쳤을 때의 내용 */
         .details-content {
-            padding-top: 20px;
+            padding-top: 10px;
             color: #515154;
             font-size: 17px;
             border-top: 1px solid #e5e5ea;
             margin-top: 20px;
         }
-
-        .details-content h4 {
-            color: #1d1d1f;
-            font-size: 18px;
-            margin: 20px 0 8px 0;
-        }
-
-        .details-content ul {
-            padding-left: 20px;
-            margin-bottom: 20px;
-        }
-
-        .details-content li {
-            margin-bottom: 8px;
-        }
-
-        /* 하단 콜투액션(버튼) 영역 */
-        .footer-cta {
-            text-align: center;
-            margin-top: 60px;
-            padding: 40px;
-            background-color: #ffffff;
-            border-radius: 18px;
-        }
-
-        .footer-cta h3 {
-            font-size: 24px;
-            margin-top: 0;
-        }
-
-        .btn {
-            display: inline-block;
-            background-color: #0071e3;
-            color: #ffffff;
-            padding: 14px 28px;
-            border-radius: 980px;
-            text-decoration: none;
-            font-size: 17px;
-            font-weight: 400;
-            margin-top: 15px;
-            transition: background-color 0.2s ease;
-        }
-
-        .btn:hover { background-color: #0077ed; }
+        .details-content h4 { color: #1d1d1f; font-size: 18px; margin: 20px 0 8px 0; }
 
         .tip-box {
             background-color: #f5f5f7;
-            padding: 15px 20px;
+            padding: 20px;
             border-radius: 12px;
-            font-size: 15px;
+            font-size: 16px;
             margin-top: 20px;
             color: #1d1d1f;
+            line-height: 1.7;
         }
 
-        /* 모바일 반응형 처리 */
+        .highlight { color: #e51c23; font-weight: 600; }
+        .gray-text { color: #86868b; font-weight: 600; }
+
+        /* 핀치줌 관련 스타일 */
+        .panzoom-container {
+            overflow: hidden;
+            border-radius: 12px;
+            border: 1px solid #e5e5ea;
+            margin: 15px 0;
+            background-color: #f0f0f0;
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        .panzoom-target {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            touch-action: none; 
+            cursor: grab;
+        }
+        .panzoom-target:active { cursor: grabbing; }
+
         @media (max-width: 768px) {
-            .hero h1 { font-size: 36px; }
+            .hero h1 { font-size: 32px; }
             .hero p { font-size: 18px; }
-            summary { font-size: 19px; }
+            summary, .guide-card h3 { font-size: 19px; }
         }
     </style>
 </head>
@@ -186,103 +199,209 @@
 
     <header>
         <div class="nav-container">
-            <a href="#" class="nav-logo">평가원 분석 리포트 지원센터</a>
+            <a id="nav-logo" class="nav-logo">Integrate</a>
             <div class="nav-links">
-                <a href="#">가이드 홈</a>
-                <a href="#">자료실</a>
+                <a id="btn-analysis">분석 페이지</a>
+                <a href="https://integrate-git.github.io/timer/timer.html">타이머</a>
+                <a href="https://m.cafe.naver.com/ca-fe/web/cafes/23380319/menus/427">이해원연구소 Q&A</a>
             </div>
         </div>
     </header>
 
-    <section class="hero">
-        <h1>한완기 실전편 분석 페이지 가이드</h1>
-        <p>분석 활용 가이드에 대한 설명</p>
-    </section>
+    <div id="view-main" class="view-section active">
+        <section class="hero">
+            <h1>📊 [학습 가이드]<br>'한눈에 보는 등급컷' 200% 활용법</h1>
+            <p>기출문제를 풀고 채점한 뒤, "지금 내 원점수면 수능에서 몇 등급일까?" 궁금하셨죠?<br>이 표를 정확히 읽고 나의 약점을 보완하는 방법을 알려드릴게요!</p>
+        </section>
 
-    <main class="container">
-        
-        <div class="guide-card">
-            <details>
-                <summary>1. 시험 운용 및 약점 파악</summary>
-                <div class="details-content">
-                    <p>나의 시험 운용 흐름을 객관적으로 돌아보고, 단원별로 뚫려있는 개념 구멍을 찾아내는 첫걸음입니다.</p>
-                    <h4>타임라인 기록</h4>
-                    <ul>
-                        <li>목표 타임라인과 나의 실제 타임라인을 대조해 보세요.</li>
-                        <li>어느 구간에서 시간을 많이 빼앗겼는지 파악하는 것이 중요합니다.</li>
-                    </ul>
-                    <h4>단원별 자가 점검표</h4>
-                    <ul>
-                        <li>수학Ⅰ, 수학Ⅱ, 선택과목(미적분/확률과 통계) 표에 틀린 문항(X), 풀지 못한 문항(☆)을 표시하세요.</li>
-                        <li>표시된 결과를 바탕으로 나의 취약 단원을 시각화할 수 있습니다.</li>
-                    <div class="tip-box">
-                        💡 <strong>활용 팁:</strong> 1페이지의 '복습 노트' 영역에는 해설지에 수록된 Turning-Point를 참고하여, 스스로 다시 풀 수 있게 된 과정을 반드시 직접 적어보세요.
+        <main class="container">
+            <div class="guide-card">
+                <h3>1. 막대가 왜 두 가지 색깔인가요? (실제 vs 보정)</h3>
+                <ul>
+                    <li><span class="gray-text">회색 막대(실제):</span> 이 시험이 치러졌던 과거 당시의 실제 원점수 등급컷입니다.</li>
+                    <li><span class="highlight">분홍색 막대(보정):</span> 현재 수능을 준비하는 여러분이 기준으로 삼아야 할 <strong>‘보정 등급컷’</strong>입니다.</li>
+                </ul>
+                <p>과거엔 낯설고 어려웠던 신유형도 지금은 익숙한 기출 유형이 되었기 때문에, 당시 점수 그대로 내 실력을 판단하면 안 됩니다. 보정 등급컷은 현재 수험생들의 실력(N수생 비율 등)과 변화한 시험 경향을 모두 반영하여 <strong>“이 시험을 지금 수능에서 본다면 등급컷이 어떻게 될까?”</strong>를 정밀하게 예측한 현실적인 기준선입니다.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>2. 등급컷이 왜 하나의 점수가 아니라 '막대(범위)'로 되어 있나요?</h3>
+                <p>현재 수능 수학은 원점수 총점이 같더라도, '공통 과목'과 '선택 과목' 중 어디서 점수를 잃었는지에 따라 최종 표준점수와 등급이 달라집니다.</p>
+                <p>즉, 같은 82점이라도 틀린 과목에 따라 1등급이 될 수도, 2등급이 될 수도 있기 때문에 등급이 나뉘는 구간을 선이 아닌 ‘범위(막대)’로 표현한 것입니다.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>3. 선택 과목에 따라 시험 운용 전략이 달라집니다! (⭐️매우 중요)</h3>
+                <ul>
+                    <li><strong>미적분 선택자:</strong> '미적분(선택)' 문항에서 실수했을 때 감점 타격이 더 큽니다. 예를 들어 원점수 82점을 받았을 때, 공통 과목에서 주로 틀렸다면 1등급을 지킬 가능성이 높지만, 미적분에서 많이 틀렸다면 2등급으로 떨어질 위험이 높습니다.</li>
+                    <li><strong>확률과 통계 선택자:</strong> 반대로 '공통 과목' 문항에서 실수했을 때 감점 타격이 더 큽니다. 따라서 확률과 통계 선택자는 공통 과목에서 최대한 실수를 줄이고 점수를 사수하는 것이 등급 방어의 핵심 전략입니다.</li>
+                </ul>
+            </div>
+
+            <div class="tip-box">
+                💡 <strong>요약하자면?</strong><br>
+                분홍색 막대인 <strong>'보정 등급컷'</strong>을 통해 현재 나의 진짜 위치를 냉정하게 점검해 보세요. 그리고 자신의 선택 과목에 따라 공통/선택 중 어느 부분의 오답을 더 치명적으로 받아들이고 보완해야 할지 전략을 세우는 데 이 지표를 적극 활용하시기 바랍니다!
+            </div>
+        </main>
+    </div>
+
+    <div id="view-analysis" class="view-section">
+        <section class="hero">
+            <h1>한완기 실전편 분석 페이지 가이드</h1>
+            <p>분석 활용 가이드에 대한 설명</p>
+        </section>
+
+        <main class="container">
+            <div class="guide-card">
+                <details>
+                    <summary>1. 시험 운용 및 약점 파악</summary>
+                    <div class="details-content">
+                        <p>나의 시험 운용 흐름을 객관적으로 돌아보고, 단원별로 뚫려있는 개념 구멍을 찾아내는 첫걸음입니다.</p>
+                        
+                        <h4>타임라인 기록</h4>
+                        <ul>
+                            <li>목표 타임라인과 나의 실제 타임라인을 대조해 보세요.</li>
+                            <li>어느 구간에서 시간을 많이 빼앗겼는지 파악하는 것이 중요합니다.</li>
+                        </ul>
+                        <h4>단원별 자가 점검표</h4>
+                        <ul>
+                            <li>수학Ⅰ, 수학Ⅱ, 선택과목(미적분/확률과 통계) 표에 틀린 문항(X), 풀지 못한 문항(☆)을 표시하세요.</li>
+                            <li>표시된 결과를 바탕으로 나의 취약 단원을 시각화할 수 있습니다.</li>
+                        </ul>
+                        <div class="tip-box" style="margin-top: 0; padding: 15px;">
+                            💡 <strong>활용 팁:</strong> 1페이지의 '복습 노트' 영역에는 해설지에 수록된 Turning-Point를 참고하여, 스스로 다시 풀 수 있게 된 과정을 반드시 직접 적어보세요.
+                        </div>
+                        <h4>복습 노트</h4>
+                        <ul>
+                            <li>복습 단계에서 학습한 내용을 간단하게 기록하세요.</li>
+                            <li>아래의 사진은 작성 예시입니다. (손가락으로 확대하여 자세히 볼 수 있습니다)</li>
+                        </ul>
+                        <div class="panzoom-container">
+                            <img id="example-image" class="panzoom-target" src="example.png" alt="분석 페이지 작성 예시">
+                        </div>
                     </div>
-                    <h4>복습 노트</h4>
-                    <ul>
-                        <li>복습 단계에서 학습한 내용을 간단하게 기록하세요.</li>
-                        <li>아래의 사진은 작성 예시입니다.</li>
-                    </ul>
-                    <img id="example-image" class="zoomable-image" src="example.png" alt="분석 페이지 작성 예시">
-                    </ul>
-                </div>
-            </details>
-        </div>
+                </details>
+            </div>
 
-        <div class="guide-card">
-            <details>
-                <summary>2. 해당 시험의 총평 및 보정 등급컷</summary>
-                <div class="details-content">
-                    <p>출제자의 의도를 읽고, 이번 시험의 전체적인 난이도 속에서 나의 현재 위치를 정확히 파악합니다.</p>
-                    <h4>총평</h4>
-                    <ul>
-                        <li>공통과목과 선택과목의 체감 난이도를 확인하세요.</li>
-                    </ul>
-                    <h4>한눈에 보는 등급컷</h4>
-                    <ul>
-                        <li>그래프를 통해 미적분과 확률과 통계 응시자 간의 유불리를 확인합니다.</li>
-                        <li>나의 원점수를 바탕으로 예상 등급과 백분위를 객관적으로 가늠해 보세요.</li>
-                    </ul>
-                </div>
-            </details>
-        </div>
+            <div class="guide-card">
+                <details>
+                    <summary>2. 해당 시험의 총평 및 보정 등급컷</summary>
+                    <div class="details-content">
+                        <p>출제자의 의도를 읽고, 이번 시험의 전체적인 난이도 속에서 나의 현재 위치를 정확히 파악합니다.</p>
+                        <h4>총평 읽기</h4>
+                        <ul>
+                            <li>공통과목과 선택과목의 체감 난이도를 확인하세요.</li>
+                        </ul>
+                        <h4>한눈에 보는 등급컷</h4>
+                        <ul>
+                            <li>그래프를 통해 미적분과 확률과 통계 응시자 간의 유불리를 확인합니다.</li>
+                            <li>나의 원점수를 바탕으로 예상 등급과 백분위를 객관적으로 가늠해 보세요.</li>
+                        </ul>
+                    </div>
+                </details>
+            </div>
 
-        <div class="guide-card">
-            <details>
-                <summary>3. 문항별 출제 의도 및 상세 분석</summary>
-                <div class="details-content">
-                    <p>단순한 문제 풀이를 넘어, 평가원이 어떤 개념을 묻고자 했는지 개별 문항의 뼈대를 해부합니다.</p>
-                    <h4>문항 구성표</h4>
-                    <ul>
-                        <li>출제된 단원과 문항 번호를 매칭하여 시험의 전반적인 출제 비중을 확인하세요.</li>
-                    </ul>
-                    <h4>개별 문항 분석</h4>
-                    <ul>
-                        <li>핵심 문항들의 출제 포인트(예: 미분가능성, 귀납적 추론 등)와 평가원의 의도를 읽어보세요.</li>
-                        <li>리포트가 제시하는 접근법과 나의 실제 시험장 풀이 방식을 비교하며 교정해야 할 점을 찾습니다.</li>
-                    </ul>
-                </div>
-            </details>
-        </div>
+            <div class="guide-card">
+                <details>
+                    <summary>3. 문항별 출제 의도 및 상세 분석</summary>
+                    <div class="details-content">
+                        <p>단순한 문제 풀이를 넘어, 평가원이 어떤 개념을 묻고자 했는지 개별 문항의 뼈대를 해부합니다.</p>
+                        <h4>문항 구성표</h4>
+                        <ul>
+                            <li>출제된 단원과 문항 번호를 매칭하여 시험의 전반적인 출제 비중을 확인하세요.</li>
+                        </ul>
+                        <h4>개별 문항 분석</h4>
+                        <ul>
+                            <li>핵심 문항들의 출제 포인트(예: 미분가능성, 귀납적 추론 등)와 평가원의 의도를 읽어보세요.</li>
+                            <li>리포트가 제시하는 접근법과 나의 실제 시험장 풀이 방식을 비교하며 교정해야 할 점을 찾습니다.</li>
+                        </ul>
+                    </div>
+                </details>
+            </div>
 
-        <div class="guide-card">
-            <details>
-                <summary>4. 수준별 맞춤 학습 전략 수립</summary>
-                <div class="details-content">
-                    <p>완벽한 복기의 완성입니다. 현재 나의 등급대에서 다음 시험을 위해 당장 실천해야 할 구체적인 행동 강령을 제시합니다.</p>
-                    <h4>목표 등급별 복기 포인트</h4>
-                    <ul>
-                        <li>1등급, 2등급, 3등급 등 나의 현재 수준과 목표 수준에 맞는 박스를 찾아 정독하세요.</li>
-                    </ul>
-                    <h4>선택과목별 전략 적용</h4>
-                    <ul>
-                        <li>가이드에 맞춰 다음 복습 계획과 기출 학습 방향을 설정하세요.</li>
-                    </ul>
-                </div>
-            </details>
-        </div>
+            <div class="guide-card">
+                <details>
+                    <summary>4. 수준별 맞춤 학습 전략 수립</summary>
+                    <div class="details-content">
+                        <p>현재 나의 등급대에서 다음 시험을 위해 당장 실천해야 할 구체적인 행동 강령을 제시합니다.</p>
+                        <h4>목표 등급별 복기 포인트</h4>
+                        <ul>
+                            <li>1등급, 2등급, 3등급 등 나의 현재 수준과 목표 수준에 맞는 박스를 찾아 정독하세요.</li>
+                        </ul>
+                        <h4>선택과목별 전략 적용</h4>
+                        <ul>
+                            <li>가이드에 맞춰 다음 복습 계획과 기출 학습 방향을 설정하세요.</li>
+                        </ul>
+                    </div>
+                </details>
+            </div>
+        </main>
+    </div>
 
-    </main>
+    <script src="https://unpkg.com/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- 1. 페이지 전환 (SPA) 로직 ---
+            const viewMain = document.getElementById('view-main');
+            const viewAnalysis = document.getElementById('view-analysis');
+            const btnLogo = document.getElementById('nav-logo');
+            const btnAnalysis = document.getElementById('btn-analysis');
+
+            function switchView(targetView) {
+                // 모든 뷰 숨기기
+                viewMain.classList.remove('active');
+                viewAnalysis.classList.remove('active');
+                btnAnalysis.classList.remove('active');
+
+                // 타겟 뷰 보이기
+                if(targetView === 'main') {
+                    viewMain.classList.add('active');
+                } else if(targetView === 'analysis') {
+                    viewAnalysis.classList.add('active');
+                    btnAnalysis.classList.add('active'); // 네비게이션 활성화 표시
+                    
+                    // 분석 페이지가 열릴 때 Panzoom 레이아웃 재계산 (버그 방지)
+                    setTimeout(() => panzoomInstance.reset(), 50);
+                }
+            }
+
+            // 로고 클릭 시 메인으로
+            btnLogo.addEventListener('click', (e) => {
+                e.preventDefault();
+                switchView('main');
+            });
+
+            // 분석 페이지 버튼 클릭 시
+            btnAnalysis.addEventListener('click', (e) => {
+                e.preventDefault();
+                switchView('analysis');
+            });
+
+
+            // --- 2. Panzoom (인라인 줌) 로직 ---
+            const imageElement = document.getElementById('example-image');
+            const panzoomInstance = Panzoom(imageElement, {
+                maxScale: 5,
+                minScale: 1,
+                contain: 'outside',
+                cursor: 'grab',
+            });
+
+            imageElement.parentElement.addEventListener('wheel', function(event) {
+                if (!event.shiftKey) return;
+                panzoomInstance.zoomWithWheel(event);
+            });
+
+            const detailsTag = imageElement.closest('details');
+            if (detailsTag) {
+                detailsTag.addEventListener('toggle', function() {
+                    if (this.open) {
+                        setTimeout(() => panzoomInstance.reset(), 100);
+                    }
+                });
+            }
+        });
+    </script>
 
 </body>
 </html>
