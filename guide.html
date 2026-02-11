@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>한완기 실전편 분석 페이지 가이드</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.css">
+    
     <style>
         body {
             margin: 0;
@@ -136,35 +139,6 @@
             margin-bottom: 8px;
         }
 
-        /* 하단 콜투액션(버튼) 영역 */
-        .footer-cta {
-            text-align: center;
-            margin-top: 60px;
-            padding: 40px;
-            background-color: #ffffff;
-            border-radius: 18px;
-        }
-
-        .footer-cta h3 {
-            font-size: 24px;
-            margin-top: 0;
-        }
-
-        .btn {
-            display: inline-block;
-            background-color: #0071e3;
-            color: #ffffff;
-            padding: 14px 28px;
-            border-radius: 980px;
-            text-decoration: none;
-            font-size: 17px;
-            font-weight: 400;
-            margin-top: 15px;
-            transition: background-color 0.2s ease;
-        }
-
-        .btn:hover { background-color: #0077ed; }
-
         .tip-box {
             background-color: #f5f5f7;
             padding: 15px 20px;
@@ -172,6 +146,21 @@
             font-size: 15px;
             margin-top: 20px;
             color: #1d1d1f;
+        }
+
+        /* 이미지 호버 효과 (클릭할 수 있다는 인지 부여) */
+        .zoomable-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            margin: 15px 0;
+            border: 1px solid #e5e5ea;
+            cursor: zoom-in;
+            transition: opacity 0.2s ease;
+        }
+
+        .zoomable-image:hover {
+            opacity: 0.9;
         }
 
         /* 모바일 반응형 처리 */
@@ -206,6 +195,9 @@
                 <summary>1. 시험 운용 및 약점 파악</summary>
                 <div class="details-content">
                     <p>나의 시험 운용 흐름을 객관적으로 돌아보고, 단원별로 뚫려있는 개념 구멍을 찾아내는 첫걸음입니다.</p>
+                    
+                    <img id="example-image" class="zoomable-image" src="example.png" alt="분석 페이지 작성 예시">
+                    
                     <h4>타임라인 기록</h4>
                     <ul>
                         <li>목표 타임라인과 나의 실제 타임라인을 대조해 보세요.</li>
@@ -219,7 +211,6 @@
                     <div class="tip-box">
                         💡 <strong>활용 팁:</strong> 1페이지의 '복습 노트' 영역에는 해설지에 수록된 Turning-Point를 참고하여, 스스로 다시 풀 수 있게 된 과정을 반드시 직접 적어보세요.
                     </div>
-                    <img src="example.png" alt="분석 페이지 작성 예시" style="max-width: 100%; height: auto; border-radius: 12px; margin: 15px 0; border: 1px solid #e5e5ea;">
                 </div>
             </details>
         </div>
@@ -278,6 +269,29 @@
         </div>
 
     </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.js"></script>
+    <script>
+        // DOM(페이지) 로드가 완료된 후 실행되도록 설정
+        document.addEventListener('DOMContentLoaded', function() {
+            // 이미지를 선택하고 뷰어 옵션 설정
+            const image = document.getElementById('example-image');
+            const viewer = new Viewer(image, {
+                inline: false,       // 페이지 안이 아닌 화면 전체를 덮는 모달 형태로 띄움
+                button: true,        // 우측 상단 닫기 버튼 표시
+                navbar: false,       // 하단 썸네일 네비게이션 숨김 (단일 이미지이므로 불필요)
+                title: false,        // 이미지 제목 숨김
+                toolbar: false,      // 모바일 친화성을 위해 하단 조작 버튼(확대/축소 등) 숨김. 터치 핀치줌으로 해결
+                tooltip: false,      // 확대 비율 툴팁 숨김
+                movable: true,       // 드래그(스와이프)로 이동 가능
+                zoomable: true,      // 핀치줌(두 손가락 확대/축소) 활성화
+                rotatable: false,    // 회전 기능 비활성화
+                scalable: false,     // 반전 기능 비활성화
+                transition: true,    // 부드러운 애니메이션 효과
+                fullscreen: false    // 브라우저 전체화면 API 사용 안함 (모바일 호환성을 위해)
+            });
+        });
+    </script>
 
 </body>
 </html>
