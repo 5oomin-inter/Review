@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026.6 평가원 분석 리포트 가이드</title>
+    <style>
+        /* 글로벌 스타일 (Apple 특유의 폰트 및 배경색 차용) */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #1d1d1f;
+            background-color: #fbfbfd;
+            word-break: keep-all;
+        }
+
+        /* 상단 네비게이션 바 */
+        header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 14px 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .nav-logo { color: #1d1d1f; text-decoration: none; font-size: 18px; }
+        .nav-links a { color: #0066cc; text-decoration: none; margin-left: 20px; }
+        .nav-links a:hover { text-decoration: underline; }
+
+        /* 히어로 섹션 (메인 타이틀) */
+        .hero {
+            text-align: center;
+            padding: 80px 20px 50px;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            font-weight: 700;
+            letter-spacing: -0.015em;
+            margin: 0 0 15px 0;
+        }
+
+        .hero p {
+            font-size: 21px;
+            color: #86868b;
+            max-width: 680px;
+            margin: 0 auto;
+            font-weight: 400;
+        }
+
+        /* 메인 콘텐츠 컨테이너 */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px 80px;
+        }
+
+        /* 아코디언 메뉴 스타일 (카드형) */
+        .guide-card {
+            background-color: #ffffff;
+            border-radius: 18px;
+            padding: 10px 30px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .guide-card:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        details {
+            padding: 15px 0;
+        }
+
+        summary {
+            font-size: 22px;
+            font-weight: 600;
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            outline: none;
+        }
+
+        /* 기본 화살표 숨기기 및 커스텀 아이콘 설정 */
+        summary::-webkit-details-marker { display: none; }
+        summary::after {
+            content: '+';
+            font-size: 28px;
+            color: #0066cc;
+            font-weight: 400;
+            transition: transform 0.3s ease;
+        }
+        
+        details[open] summary::after {
+            content: '−';
+        }
+
+        /* 아코디언 펼쳤을 때의 내용 */
+        .details-content {
+            padding-top: 20px;
+            color: #515154;
+            font-size: 17px;
+            border-top: 1px solid #e5e5ea;
+            margin-top: 20px;
+        }
+
+        .details-content h4 {
+            color: #1d1d1f;
+            font-size: 18px;
+            margin: 20px 0 8px 0;
+        }
+
+        .details-content ul {
+            padding-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        .details-content li {
+            margin-bottom: 8px;
+        }
+
+        /* 하단 콜투액션(버튼) 영역 */
+        .footer-cta {
+            text-align: center;
+            margin-top: 60px;
+            padding: 40px;
+            background-color: #ffffff;
+            border-radius: 18px;
+        }
+
+        .footer-cta h3 {
+            font-size: 24px;
+            margin-top: 0;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: #0071e3;
+            color: #ffffff;
+            padding: 14px 28px;
+            border-radius: 980px;
+            text-decoration: none;
+            font-size: 17px;
+            font-weight: 400;
+            margin-top: 15px;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn:hover { background-color: #0077ed; }
+
+        .tip-box {
+            background-color: #f5f5f7;
+            padding: 15px 20px;
+            border-radius: 12px;
+            font-size: 15px;
+            margin-top: 20px;
+            color: #1d1d1f;
+        }
+
+        /* 모바일 반응형 처리 */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 36px; }
+            .hero p { font-size: 18px; }
+            summary { font-size: 19px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <a href="#" class="nav-logo">평가원 분석 리포트 지원센터</a>
+            <div class="nav-links">
+                <a href="#">가이드 홈</a>
+                <a href="#">자료실</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <h1>2026.6 평가원 분석 리포트 사용 가이드</h1>
+        <p>시험 당일의 기억을 가장 완벽한 데이터로 바꾸는 4단계 복기 가이드. 4페이지로 구성된 리포트를 200% 활용하는 방법을 알아보세요.</p>
+    </section>
+
+    <main class="container">
+        
+        <div class="guide-card">
+            <details>
+                <summary>1. 시험 운용 및 약점 파악 (1페이지)</summary>
+                <div class="details-content">
+                    <p>나의 시험 운용 흐름을 객관적으로 돌아보고, 단원별로 뚫려있는 개념 구멍을 찾아내는 첫걸음입니다.</p>
+                    <h4>타임라인 기록</h4>
+                    <ul>
+                        <li>목표 타임라인과 나의 실제 타임라인을 대조해 보세요.</li>
+                        <li>어느 구간에서 시간을 많이 빼앗겼는지 파악하는 것이 중요합니다.</li>
+                    </ul>
+                    <h4>단원별 자가 점검표</h4>
+                    <ul>
+                        <li>수학Ⅰ, 수학Ⅱ, 선택과목(미적분/확률과 통계) 표에 맞힌 문항(O), 틀린 문항(X), 헷갈린 문항(△)을 표시하세요.</li>
+                        <li>표시된 결과를 바탕으로 나의 취약 단원을 시각화할 수 있습니다.</li>
+                    </ul>
+                </div>
+            </details>
+        </div>
+
+        <div class="guide-card">
+            <details>
+                <summary>2. 전체 난이도 및 객관적 위치 가늠 (2페이지)</summary>
+                <div class="details-content">
+                    <p>출제자의 의도를 읽고, 이번 시험의 전체적인 난이도 속에서 나의 현재 위치를 정확히 파악합니다.</p>
+                    <h4>총평 읽기</h4>
+                    <ul>
+                        <li>공통과목과 선택과목의 체감 난이도를 확인하세요.</li>
+                        <li>내가 어려웠던 부분이 남들도 어려웠던 킬러 문항이었는지, 혹은 나만의 약점이었는지 대조해 봅니다.</li>
+                    </ul>
+                    <h4>한눈에 보는 등급컷</h4>
+                    <ul>
+                        <li>그래프를 통해 미적분과 확률과 통계 응시자 간의 유불리를 확인합니다.</li>
+                        <li>나의 원점수를 바탕으로 예상 등급과 백분위를 객관적으로 가늠해 보세요.</li>
+                    </ul>
+                </div>
+            </details>
+        </div>
+
+        <div class="guide-card">
+            <details>
+                <summary>3. 문항별 출제 의도 및 상세 분석 (3페이지)</summary>
+                <div class="details-content">
+                    <p>단순한 문제 풀이를 넘어, 평가원이 어떤 개념을 묻고자 했는지 개별 문항의 뼈대를 해부합니다.</p>
+                    <h4>문항 구성표</h4>
+                    <ul>
+                        <li>출제된 단원과 문항 번호를 매칭하여 시험의 전반적인 출제 비중을 확인하세요.</li>
+                    </ul>
+                    <h4>개별 문항 분석</h4>
+                    <ul>
+                        <li>핵심 문항들의 출제 포인트(예: 미분가능성, 귀납적 추론 등)와 평가원의 의도를 읽어보세요.</li>
+                        <li>리포트가 제시하는 접근법과 나의 실제 시험장 풀이 방식을 비교하며 교정해야 할 점을 찾습니다.</li>
+                    </ul>
+                </div>
+            </details>
+        </div>
+
+        <div class="guide-card">
+            <details>
+                <summary>4. 수준별 맞춤 학습 전략 수립 (4페이지)</summary>
+                <div class="details-content">
+                    <p>완벽한 복기의 완성입니다. 현재 나의 등급대에서 다음 시험을 위해 당장 실천해야 할 구체적인 행동 강령을 제시합니다.</p>
+                    <h4>목표 등급별 복기 포인트</h4>
+                    <ul>
+                        <li>1등급, 2등급, 3등급 등 나의 현재 수준과 목표 수준에 맞는 박스를 찾아 정독하세요.</li>
+                    </ul>
+                    <h4>선택과목별 전략 적용</h4>
+                    <ul>
+                        <li>미적분과 확률과 통계는 집중해야 할 포인트가 다릅니다. (예: 대수적 방정식 세우기 vs 케이스 분류하기)</li>
+                        <li>가이드에 맞춰 다음 복습 계획과 기출 학습 방향을 설정하세요.</li>
+                    </ul>
+                    <div class="tip-box">
+                        💡 <strong>활용 팁:</strong> 1페이지의 '복습 노트' 영역에는 해설지에 수록된 Turning-Point를 참고하여, 스스로 다시 풀 수 있게 된 과정을 반드시 직접 적어보세요.
+                    </div>
+                </div>
+            </details>
+        </div>
+
+        <div class="footer-cta">
+            <h3>모든 준비가 끝났나요?</h3>
+            <p>분석 리포트를 인쇄하여 펜을 들고 직접 기록을 시작해 보세요.</p>
+            <a href="#" class="btn">분석 리포트 PDF 다운로드</a>
+        </div>
+
+    </main>
+
+</body>
+</html>
